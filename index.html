@@ -1,0 +1,1765 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linear Regression Studio</title>
+  <style>
+    :root {
+      --bg: #f4efe4;
+      --ink: #162133;
+      --ink-soft: #516076;
+      --line: rgba(22, 33, 51, 0.12);
+      --line-strong: rgba(22, 33, 51, 0.22);
+      --panel: rgba(255, 252, 247, 0.86);
+      --panel-strong: rgba(255, 250, 242, 0.95);
+      --accent: #f05d3d;
+      --accent-deep: #c74b30;
+      --teal: #1f7a8c;
+      --gold: #f5a623;
+      --danger: #8d2b2b;
+      --warning: #8f5f00;
+      --success: #20684f;
+      --shadow: 0 24px 60px rgba(20, 28, 44, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(240, 93, 61, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(31, 122, 140, 0.14), transparent 26%),
+        linear-gradient(180deg, #f9f4e8 0%, #f2eadb 100%);
+    }
+
+    button, input, select, table { font: inherit; }
+
+    .page-shell {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 32px 20px 36px;
+    }
+
+    .return-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(22, 33, 51, 0.08);
+      background: rgba(223, 230, 220, 0.9);
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 10px 24px rgba(20, 28, 44, 0.08);
+      transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .return-link:hover {
+      transform: translateY(-1px);
+      background: rgba(218, 226, 214, 0.98);
+      box-shadow: 0 14px 28px rgba(20, 28, 44, 0.12);
+    }
+
+    .return-link:focus {
+      outline: 2px solid rgba(31, 122, 140, 0.35);
+      outline-offset: 2px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow, .section-kicker, .status-label, .plot-toolbar-label, th {
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-deep);
+    }
+
+    .hero h1, .panel-head h2, .card-head h3 {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    }
+
+    .hero h1 {
+      max-width: 14ch;
+      font-size: clamp(2.4rem, 5vw, 4.9rem);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy {
+      max-width: 62ch;
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+    }
+
+    .workspace {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: minmax(360px, 530px) minmax(0, 1fr);
+    }
+
+    .control-column { display: grid; gap: 18px; align-content: start; }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .control-panel, .graph-panel {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .panel-head, .card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel-head h2 {
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .panel-head p, .card-head p, .plot-caption, .support-text {
+      margin: 6px 0 0;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
+    .warning-text {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .objective-card {
+      background:
+        linear-gradient(180deg, rgba(255, 249, 239, 0.7), rgba(255, 231, 190, 0.84)),
+        rgba(245, 166, 35, 0.14);
+      border-color: rgba(245, 166, 35, 0.46);
+    }
+
+    .status-card {
+      background:
+        linear-gradient(180deg, rgba(31, 122, 140, 0.08), rgba(255, 255, 255, 0.75)),
+        var(--panel-strong);
+    }
+
+    .card-head h3 { font-size: 1.12rem; }
+    .card-head.compact { margin-bottom: 14px; }
+
+    .pill-row, .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    label + .button-row {
+      margin-top: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--accent-deep);
+      background: rgba(240, 93, 61, 0.1);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      color: var(--ink);
+      background: rgba(31, 122, 140, 0.12);
+      transition: transform 0.16s ease, background-color 0.16s ease, opacity 0.16s ease;
+      text-decoration: none;
+    }
+
+    .button:hover, .plot-tool-button:hover { transform: translateY(-1px); }
+    .button:hover, .plot-tool-button:hover { background: rgba(31, 122, 140, 0.2); }
+    .button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    label { display: grid; gap: 7px; }
+    label span {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+    }
+
+    input:focus, select:focus, .button:focus, .plot-tool-button:focus {
+      outline: 2px solid rgba(31, 122, 140, 0.35);
+      outline-offset: 2px;
+    }
+
+    .objective-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .calc-card {
+      display: grid;
+      gap: 7px;
+      align-content: start;
+      min-height: 44px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 166, 35, 0.46);
+      background: rgba(255, 255, 255, 0.74);
+    }
+
+    .calc-label {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent-deep);
+    }
+
+    .calc-value {
+      font-size: 1.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    .toggle-grid { display: grid; gap: 12px; }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .checkbox-row input { width: auto; min-height: auto; }
+    .checkbox-row span { font-weight: 600; color: var(--ink); }
+
+    .teaching-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+
+    .teaching-list li + li { margin-top: 8px; }
+    .coach-prompt { margin-top: 0; color: var(--ink); font-size: 0.98rem; }
+
+    .graph-head { align-items: end; }
+    .graph-hint {
+      margin: 0;
+      align-self: center;
+      font-weight: 600;
+      color: var(--accent-deep);
+    }
+
+    .plot-control-stack {
+      display: inline-grid;
+      gap: 10px;
+      justify-self: end;
+    }
+
+    .plot-shell {
+      border-radius: 24px;
+      padding: 10px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 244, 235, 0.82));
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+
+    .plot-toolbar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 252, 247, 0.92);
+      border: 1px solid rgba(22, 33, 51, 0.1);
+      box-shadow: 0 10px 28px rgba(20, 28, 44, 0.12);
+      flex-wrap: wrap;
+    }
+
+    .plot-tool-button {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+      background: rgba(31, 122, 140, 0.12);
+      transition: transform 0.16s ease, background-color 0.16s ease;
+    }
+
+    .plot-reset-button {
+      justify-self: end;
+      min-height: 38px;
+      padding: 0 14px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-point { background: #2f6df6; }
+    .dot-fit { background: #f5a623; }
+    .dot-residual { background: #e05f35; }
+
+    #chart, #residualPlot {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      user-select: none;
+      touch-action: none;
+      background:
+        radial-gradient(circle at top left, rgba(31, 122, 140, 0.08), transparent 30%),
+        linear-gradient(180deg, #fffef8 0%, #faf5ec 100%);
+    }
+
+    #chart { cursor: crosshair; }
+    .residual-shell { padding: 8px; }
+
+    .status-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .status-tile {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .status-tile.wide { grid-column: 1 / -1; }
+    .status-label { display: block; margin-bottom: 10px; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .status-badge.success { color: var(--success); background: rgba(32, 104, 79, 0.14); }
+    .status-badge.warning { color: var(--warning); background: rgba(245, 166, 35, 0.18); }
+    .status-badge.danger { color: var(--danger); background: rgba(141, 43, 43, 0.14); }
+    .status-badge.neutral { color: var(--ink-soft); background: rgba(22, 33, 51, 0.08); }
+
+    .status-tile p { margin: 0; line-height: 1.5; color: var(--ink-soft); }
+
+    .residual-diagnostic {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .table-wrap { overflow-x: auto; }
+    .anova-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .anova-table th, .anova-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .anova-table td {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1160px) {
+      .workspace { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .page-shell { padding: 18px 14px 24px; }
+      .control-panel, .graph-panel { padding: 18px; }
+      .panel-head, .card-head { flex-direction: column; }
+      .objective-grid, .status-grid { grid-template-columns: 1fr; }
+      .hero h1 { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Regression Studio</p>
+        <h1>Place the data. Read the line. Explain the relationship.</h1>
+      </div>
+      <p class="hero-copy">
+        Students can build or load datasets, inspect a best-fit line, and compare the formal regression fit to custom lines they drag by hand.
+      </p>
+    </header>
+
+    <main class="workspace">
+      <div class="control-column">
+        <div class="return-row">
+          <a class="return-link" href="https://rhartlage.github.io/">Return to Dr. H's Main GitHub Tools Page</a>
+        </div>
+
+        <section class="panel control-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Setup</p>
+              <h2>Build and test a regression model</h2>
+            </div>
+          </div>
+
+          <section class="card">
+            <div class="card-head compact">
+              <div>
+                <h3>Dataset playground</h3>
+                <p>Choose a classroom-ready example or click in the graph to make your own dataset.</p>
+              </div>
+            </div>
+
+            <label>
+              <span>Example set</span>
+              <select id="presetSelect">
+                <option value="positive">Strong positive trend</option>
+                <option value="negative">Strong negative trend</option>
+                <option value="weak">Weak positive trend</option>
+                <option value="outlier">Outlier challenge</option>
+                <option value="fan">Fan shape (variance grows)</option>
+                <option value="reverseFan">Reverse fan (variance shrinks)</option>
+              </select>
+            </label>
+
+            <div class="button-row">
+              <button id="randomBtn" class="button" type="button">New random sample</button>
+              <button id="undoBtn" class="button" type="button">Undo last point</button>
+              <button id="clearBtn" class="button" type="button">Clear points</button>
+            </div>
+          </section>
+
+          <section class="card objective-card">
+            <div class="card-head">
+              <div>
+                <h3>Prediction lab</h3>
+                <p>Enter an x-value, make a prediction, and compare it to the current line.</p>
+              </div>
+            </div>
+
+            <div class="objective-grid">
+              <label>
+                <span>Input x</span>
+                <input id="predictX" type="text" inputmode="decimal" value="50" />
+              </label>
+              <div class="calc-card">
+                <span class="calc-label">Predicted y-hat</span>
+                <strong id="predictY" class="calc-value">&mdash;</strong>
+              </div>
+            </div>
+
+            <p id="predictText" class="support-text">Add at least two points to unlock predictions.</p>
+            <p id="predictWarning" class="support-text warning-text" hidden></p>
+          </section>
+
+          <section class="card">
+            <div class="card-head compact">
+              <div>
+                <h3>Graph layers</h3>
+                <p>Turn on visual supports that help students see what least squares is doing.</p>
+              </div>
+            </div>
+
+            <div class="toggle-grid">
+              <label class="checkbox-row">
+                <input id="showResiduals" type="checkbox" checked />
+                <span>Show residuals</span>
+              </label>
+              <label class="checkbox-row">
+                <input id="showMeanPoint" type="checkbox" checked />
+                <span>Show mean point</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head compact">
+              <div>
+                <h3>Learning flow</h3>
+                <p>Use this talk track to keep the tool instructional instead of just interactive.</p>
+              </div>
+            </div>
+
+            <p id="coachText" class="support-text coach-prompt">
+              Start with a strong trend, then drag the line away from the cloud and compare the residual plot.
+            </p>
+
+            <ol class="teaching-list">
+              <li>Describe the direction of the pattern before reading the numbers.</li>
+              <li>Interpret slope as “for each +1 in x, predicted y changes by...”</li>
+              <li>Drag the line away from best fit and compare how the residual plot changes.</li>
+              <li>Use the fan-shape examples to discuss non-constant variance.</li>
+            </ol>
+          </section>
+        </section>
+      </div>
+
+      <section class="panel graph-panel">
+        <div class="panel-head graph-head">
+          <div>
+            <p class="section-kicker">Visualization</p>
+            <h2>Data cloud, model line, and residuals</h2>
+          </div>
+          <p class="graph-hint">
+            Click without dragging to add points. Drag the graph to pan, use the wheel or zoom buttons to scale, and drag the line or endpoints to test non-optimal fits.
+          </p>
+        </div>
+
+        <div class="plot-control-stack">
+          <div class="plot-toolbar" aria-label="Graph controls">
+            <span class="plot-toolbar-label">Zoom</span>
+            <button id="zoomOutBtn" class="plot-tool-button" type="button" aria-label="Zoom out">-</button>
+            <button id="zoomInBtn" class="plot-tool-button" type="button" aria-label="Zoom in">+</button>
+          </div>
+
+          <div class="button-row">
+            <button id="resetViewBtn" class="button plot-reset-button" type="button">Reset view</button>
+            <button id="snapBestFitBtn" class="button plot-reset-button" type="button">Snap line to best fit</button>
+          </div>
+
+          <div class="plot-toolbar" aria-label="Graph legend">
+            <span class="plot-toolbar-label">Legend</span>
+            <span class="legend-chip"><span class="legend-dot dot-point"></span>Data</span>
+            <span class="legend-chip"><span class="legend-dot dot-fit"></span>Model line</span>
+            <span class="legend-chip"><span class="legend-dot dot-residual"></span>Residual</span>
+          </div>
+        </div>
+
+        <div class="plot-shell">
+          <svg id="chart" viewBox="0 0 800 500" role="img" aria-label="Scatter plot with a draggable model line and optional residuals"></svg>
+        </div>
+
+        <div class="plot-caption">
+          Residuals show vertical prediction error. The highlighted mean point sits on the least-squares line. Drag the line to see how R-squared and residual structure react.
+        </div>
+
+        <section class="card">
+          <div class="card-head compact">
+            <div>
+              <h3>ANOVA table</h3>
+              <p>This table updates for the current draggable line. When the line is not at least squares, treat it as a teaching comparison rather than a formal inference table.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="anova-table" aria-label="Regression ANOVA table">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>SS</th>
+                  <th>df</th>
+                  <th>MS</th>
+                  <th>F</th>
+                  <th>p-value</th>
+                </tr>
+              </thead>
+              <tbody id="anovaTableBody"></tbody>
+            </table>
+          </div>
+          <p id="anovaNote" class="support-text">Add at least three points with different x-values to compute the regression ANOVA table.</p>
+        </section>
+
+        <section class="card status-card">
+          <div class="card-head compact">
+            <div>
+              <h3>Residual plot</h3>
+              <p>A well-matched linear model tends to leave residuals scattered around zero. Curves or fan shapes suggest trouble.</p>
+            </div>
+          </div>
+          <div class="plot-shell residual-shell">
+            <svg id="residualPlot" viewBox="0 0 800 240" role="img" aria-label="Residual plot showing x values against residuals"></svg>
+          </div>
+          <div class="residual-diagnostic">
+            <span class="status-label">Variance test</span>
+            <strong id="varianceBadge" class="status-badge neutral">Waiting</strong>
+            <p id="varianceText" class="support-text">A Breusch-Pagan-style signal check will appear here once the app can evaluate residual spread.</p>
+          </div>
+        </section>
+
+        <section class="card status-card">
+          <div class="card-head compact">
+            <div>
+              <h3>Live readout</h3>
+              <p>The app translates the regression into language students can explain.</p>
+            </div>
+          </div>
+
+          <div class="status-grid">
+            <article class="status-tile">
+              <span class="status-label">Data pattern</span>
+              <strong id="patternBadge" class="status-badge neutral">Waiting</strong>
+              <p id="patternText">Add points or load an example to describe the trend.</p>
+            </article>
+
+            <article class="status-tile">
+              <span class="status-label">Model equation</span>
+              <strong id="equationBadge" class="status-badge neutral">Not ready</strong>
+              <p id="equationText">A line needs at least two points with different x-values.</p>
+            </article>
+
+            <article class="status-tile">
+              <span class="status-label">Model quality</span>
+              <strong id="qualityBadge" class="status-badge neutral">Waiting</strong>
+              <p id="qualityText">R-squared and MSE appear once the app can fit a line.</p>
+            </article>
+
+            <article class="status-tile wide">
+              <span class="status-label">Slope interpretation</span>
+              <strong id="storyBadge" class="status-badge neutral">Explainable</strong>
+              <p id="storyText">Use the line to tell a story about how y changes as x increases.</p>
+            </article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const svg = document.getElementById("chart");
+    const residualPlot = document.getElementById("residualPlot");
+    const presetSelect = document.getElementById("presetSelect");
+    const randomBtn = document.getElementById("randomBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const zoomOutBtn = document.getElementById("zoomOutBtn");
+    const zoomInBtn = document.getElementById("zoomInBtn");
+    const resetViewBtn = document.getElementById("resetViewBtn");
+    const snapBestFitBtn = document.getElementById("snapBestFitBtn");
+    const predictXInput = document.getElementById("predictX");
+    const predictYEl = document.getElementById("predictY");
+    const predictTextEl = document.getElementById("predictText");
+    const predictWarningEl = document.getElementById("predictWarning");
+    const showResidualsInput = document.getElementById("showResiduals");
+    const showMeanPointInput = document.getElementById("showMeanPoint");
+    const coachText = document.getElementById("coachText");
+    const anovaTableBody = document.getElementById("anovaTableBody");
+    const anovaNote = document.getElementById("anovaNote");
+    const varianceBadge = document.getElementById("varianceBadge");
+    const varianceText = document.getElementById("varianceText");
+
+    const patternBadge = document.getElementById("patternBadge");
+    const patternText = document.getElementById("patternText");
+    const equationBadge = document.getElementById("equationBadge");
+    const equationText = document.getElementById("equationText");
+    const qualityBadge = document.getElementById("qualityBadge");
+    const qualityText = document.getElementById("qualityText");
+    const storyBadge = document.getElementById("storyBadge");
+    const storyText = document.getElementById("storyText");
+
+    const W = 800;
+    const H = 500;
+    const P = 55;
+    const RW = 800;
+    const RH = 240;
+    const RP = { left: 55, right: 20, top: 18, bottom: 36 };
+    const DEFAULT_VIEW = { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+    const DATA_LIMITS = { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+    const MIN_VIEW_SPAN = 2;
+    const ZOOM_IN_FACTOR = 0.8;
+    const ZOOM_OUT_FACTOR = 1.25;
+    const DRAG_THRESHOLD = 4;
+    const MIN_SLOPE_DX_RATIO = 0.015;
+
+    const pts = [];
+    const view = { ...DEFAULT_VIEW };
+    let modelLine = null;
+    let dragState = null;
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function roundTo(value, digits) {
+      const factor = 10 ** digits;
+      return Math.round(value * factor) / factor;
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return "0";
+      const rounded = Math.abs(value) < 1e-9 ? 0 : roundTo(value, 4);
+      return Number(rounded).toString();
+    }
+
+    function formatPValue(value) {
+      if (value === null || !Number.isFinite(value)) return "\u2014";
+      const clipped = Math.min(Math.max(value, 0), 1);
+      if (clipped < 0.0001) return "<0.0001";
+      return clipped.toFixed(4);
+    }
+
+    function logGamma(value) {
+      const coefficients = [
+        676.5203681218851,
+        -1259.1392167224028,
+        771.3234287776531,
+        -176.6150291621406,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.984369578019571e-6,
+        1.5056327351493116e-7,
+      ];
+
+      if (value < 0.5) {
+        return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGamma(1 - value);
+      }
+
+      let x = 0.9999999999998099;
+      const z = value - 1;
+
+      for (let i = 0; i < coefficients.length; i += 1) {
+        x += coefficients[i] / (z + i + 1);
+      }
+
+      const t = z + coefficients.length - 0.5;
+      return 0.9189385332046727 + (z + 0.5) * Math.log(t) - t + Math.log(x);
+    }
+
+    function betaContinuedFraction(a, b, x) {
+      const maxIterations = 200;
+      const epsilon = 3e-14;
+      const tiny = 1e-30;
+      const qab = a + b;
+      const qap = a + 1;
+      const qam = a - 1;
+      let c = 1;
+      let d = 1 - (qab * x) / qap;
+
+      if (Math.abs(d) < tiny) d = tiny;
+      d = 1 / d;
+
+      let h = d;
+
+      for (let m = 1; m <= maxIterations; m += 1) {
+        const m2 = 2 * m;
+        let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < tiny) d = tiny;
+        c = 1 + aa / c;
+        if (Math.abs(c) < tiny) c = tiny;
+        d = 1 / d;
+        h *= d * c;
+
+        aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < tiny) d = tiny;
+        c = 1 + aa / c;
+        if (Math.abs(c) < tiny) c = tiny;
+        d = 1 / d;
+        const delta = d * c;
+        h *= delta;
+
+        if (Math.abs(delta - 1) < epsilon) break;
+      }
+
+      return h;
+    }
+
+    function regularizedIncompleteBeta(x, a, b) {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+
+      const logBetaTerm = logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x);
+      const betaTerm = Math.exp(logBetaTerm);
+
+      if (x < (a + 1) / (a + b + 2)) {
+        return (betaTerm * betaContinuedFraction(a, b, x)) / a;
+      }
+
+      return 1 - (betaTerm * betaContinuedFraction(b, a, 1 - x)) / b;
+    }
+
+    function erf(x) {
+      const sign = x < 0 ? -1 : 1;
+      const absX = Math.abs(x);
+      const a1 = 0.254829592;
+      const a2 = -0.284496736;
+      const a3 = 1.421413741;
+      const a4 = -1.453152027;
+      const a5 = 1.061405429;
+      const p = 0.3275911;
+      const t = 1 / (1 + p * absX);
+      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
+      return sign * y;
+    }
+
+    function chiSquareUpperTailDf1(stat) {
+      if (!Number.isFinite(stat) || stat < 0) return null;
+      return Math.min(Math.max(1 - erf(Math.sqrt(stat / 2)), 0), 1);
+    }
+
+    function fRightTailPValue(fStat, df1, df2) {
+      if (!Number.isFinite(df1) || !Number.isFinite(df2) || df1 <= 0 || df2 <= 0) return null;
+      if (fStat === Infinity) return 0;
+      if (!Number.isFinite(fStat) || fStat < 0) return null;
+
+      const x = (df1 * fStat) / (df1 * fStat + df2);
+      const cdf = regularizedIncompleteBeta(x, df1 / 2, df2 / 2);
+      if (!Number.isFinite(cdf)) return null;
+      return Math.min(Math.max(1 - cdf, 0), 1);
+    }
+
+    function mean(values) {
+      return values.reduce((sum, value) => sum + value, 0) / (values.length || 1);
+    }
+
+    function randomBetween(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function niceTicks(min, max, targetTickCount) {
+      const span = max - min;
+      if (span <= 1e-9) return [min];
+      const step = niceStep(span / targetTickCount);
+      const start = Math.ceil(min / step) * step;
+      const ticks = [];
+      for (let value = start; value <= max + 1e-9; value += step) ticks.push(roundTo(value, 8));
+      return ticks;
+    }
+
+    function niceStep(rawStep) {
+      const power = 10 ** Math.floor(Math.log10(rawStep));
+      const scaled = rawStep / power;
+      if (scaled <= 1) return power;
+      if (scaled <= 2) return 2 * power;
+      if (scaled <= 5) return 5 * power;
+      return 10 * power;
+    }
+
+    function mapX(x, currentView = view) {
+      return P + ((x - currentView.minX) / (currentView.maxX - currentView.minX)) * (W - 2 * P);
+    }
+
+    function mapY(y, currentView = view) {
+      return H - P - ((y - currentView.minY) / (currentView.maxY - currentView.minY)) * (H - 2 * P);
+    }
+
+    function unmapX(px, currentView = view) {
+      return currentView.minX + ((px - P) / (W - 2 * P)) * (currentView.maxX - currentView.minX);
+    }
+
+    function unmapY(py, currentView = view) {
+      return currentView.minY + ((H - P - py) / (H - 2 * P)) * (currentView.maxY - currentView.minY);
+    }
+
+    function svgToWorld(svgX, svgY, currentView = view) {
+      return { x: unmapX(svgX, currentView), y: unmapY(svgY, currentView) };
+    }
+
+    function mapResidualX(x, currentView) {
+      return RP.left + ((x - currentView.minX) / (currentView.maxX - currentView.minX)) * (RW - RP.left - RP.right);
+    }
+
+    function mapResidualY(y, currentView) {
+      return RH - RP.bottom - ((y - currentView.minY) / (currentView.maxY - currentView.minY)) * (RH - RP.top - RP.bottom);
+    }
+
+    function addNode(root, tag, attrs, text = "") {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, String(value)));
+      if (text) el.textContent = text;
+      root.appendChild(el);
+      return el;
+    }
+
+    function addSvg(tag, attrs, text = "") {
+      return addNode(svg, tag, attrs, text);
+    }
+
+    function addResidualSvg(tag, attrs, text = "") {
+      return addNode(residualPlot, tag, attrs, text);
+    }
+
+    function setBadge(node, text, tone) {
+      node.className = `status-badge ${tone}`;
+      node.textContent = text;
+    }
+
+    function clientToSvgPoint(event) {
+      const rect = svg.getBoundingClientRect();
+      return {
+        x: ((event.clientX - rect.left) / rect.width) * W,
+        y: ((event.clientY - rect.top) / rect.height) * H,
+      };
+    }
+
+    function isInsidePlot(px, py) {
+      return px >= P && px <= W - P && py >= P && py <= H - P;
+    }
+
+    function summarizeData(data) {
+      if (!data.length) return null;
+      return { meanX: mean(data.map((point) => point.x)), meanY: mean(data.map((point) => point.y)) };
+    }
+
+    function fitLeastSquares(data) {
+      if (data.length < 2) return null;
+
+      const xs = data.map((point) => point.x);
+      const ys = data.map((point) => point.y);
+      const meanX = mean(xs);
+      const meanY = mean(ys);
+
+      let sxx = 0;
+      let syy = 0;
+      let sxy = 0;
+
+      for (const point of data) {
+        const dx = point.x - meanX;
+        const dy = point.y - meanY;
+        sxx += dx * dx;
+        syy += dy * dy;
+        sxy += dx * dy;
+      }
+
+      if (sxx <= 1e-9) return null;
+
+      const m = sxy / sxx;
+      const b = meanY - m * meanX;
+      const residuals = data.map((point) => {
+        const yHat = m * point.x + b;
+        return { x: point.x, y: point.y, yHat, error: point.y - yHat };
+      });
+
+      const sse = residuals.reduce((sum, point) => sum + point.error * point.error, 0);
+      const tss = ys.reduce((sum, y) => sum + (y - meanY) ** 2, 0);
+      const ssr = residuals.reduce((sum, point) => sum + (point.yHat - meanY) ** 2, 0);
+      const r = syy <= 1e-9 ? 0 : sxy / Math.sqrt(sxx * syy);
+      const r2 = tss <= 1e-9 ? (sse <= 1e-9 ? 1 : 0) : 1 - sse / tss;
+      const n = data.length;
+      const dfRegression = 1;
+      const dfError = n - 2;
+      const dfTotal = n - 1;
+      const msRegression = ssr;
+      const msError = dfError > 0 ? sse / dfError : null;
+      const fStat = msError === 0 ? (msRegression > 0 ? Infinity : null) : (msError && msError > 0 ? msRegression / msError : null);
+      const pValue = fRightTailPValue(fStat, dfRegression, dfError);
+
+      return {
+        m, b, r, r2, mse: sse / n, sse, tss, ssr,
+        meanX, meanY, residuals, n, dfRegression, dfError, dfTotal, msRegression, msError, fStat, pValue
+      };
+    }
+
+    function evaluateLine(data, line) {
+      if (!line || data.length < 2) return null;
+
+      const xs = data.map((point) => point.x);
+      const ys = data.map((point) => point.y);
+      const meanX = mean(xs);
+      const meanY = mean(ys);
+      const residuals = data.map((point) => {
+        const yHat = line.m * point.x + line.b;
+        return { x: point.x, y: point.y, yHat, error: point.y - yHat };
+      });
+
+      const sse = residuals.reduce((sum, point) => sum + point.error * point.error, 0);
+      const tss = ys.reduce((sum, y) => sum + (y - meanY) ** 2, 0);
+      const r2 = tss <= 1e-9 ? (sse <= 1e-9 ? 1 : 0) : 1 - sse / tss;
+      const ssr = tss - sse;
+      const n = data.length;
+      const dfRegression = 1;
+      const dfError = n - 2;
+      const dfTotal = n - 1;
+      const msRegression = ssr / dfRegression;
+      const msError = dfError > 0 ? sse / dfError : null;
+      const fStat = ssr < 0
+        ? null
+        : (msError === 0 ? (msRegression > 0 ? Infinity : null) : (msError && msError > 0 ? msRegression / msError : null));
+      const pValue = ssr < 0 ? null : fRightTailPValue(fStat, dfRegression, dfError);
+
+      return {
+        ...line,
+        meanX,
+        meanY,
+        residuals,
+        mse: sse / data.length,
+        sse,
+        tss,
+        ssr,
+        r2,
+        n,
+        dfRegression,
+        dfError,
+        dfTotal,
+        msRegression,
+        msError,
+        fStat,
+        pValue,
+      };
+    }
+
+    function getCurrentModel(bestFit) {
+      if (!bestFit) return null;
+      return modelLine ?? { m: bestFit.m, b: bestFit.b };
+    }
+
+    function resetModelLineToBestFit() {
+      const bestFit = fitLeastSquares(pts);
+      modelLine = bestFit ? { m: bestFit.m, b: bestFit.b } : null;
+    }
+
+    function isAtBestFit(bestFit, current) {
+      if (!bestFit || !current) return false;
+      return Math.abs(bestFit.m - current.m) <= 1e-6 && Math.abs(bestFit.b - current.b) <= 1e-6;
+    }
+
+    function getPrediction(model) {
+      const x = Number(predictXInput.value);
+      if (!model || !Number.isFinite(x)) return null;
+      const xs = pts.map((point) => point.x);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      return {
+        x,
+        yHat: model.m * x + model.b,
+        minX,
+        maxX,
+        extrapolates: x < minX || x > maxX,
+      };
+    }
+
+    function makeLinearDataset({ slope, intercept, noise, count }) {
+      const result = [];
+      for (let i = 0; i < count; i += 1) {
+        const x = randomBetween(8, 92);
+        const y = clamp(slope * x + intercept + randomBetween(-noise, noise), DATA_LIMITS.minY + 4, DATA_LIMITS.maxY - 4);
+        result.push({ x, y });
+      }
+      return result;
+    }
+
+    function makeHeteroDataset({ slope, intercept, minNoise, maxNoise, count, reverse = false }) {
+      const result = [];
+      for (let i = 0; i < count; i += 1) {
+        const t = count === 1 ? 0.5 : i / (count - 1);
+        const x = clamp(8 + t * 84 + randomBetween(-1.5, 1.5), 5, 95);
+        const spread = reverse ? maxNoise - t * (maxNoise - minNoise) : minNoise + t * (maxNoise - minNoise);
+        const y = clamp(slope * x + intercept + randomBetween(-spread, spread), DATA_LIMITS.minY + 4, DATA_LIMITS.maxY - 4);
+        result.push({ x, y });
+      }
+      return result;
+    }
+
+    function makeStructuredFanDataset({ slope, intercept, minSpread, maxSpread, count, reverse = false }) {
+      const result = [];
+      for (let i = 0; i < count; i += 1) {
+        const t = count === 1 ? 0.5 : i / (count - 1);
+        const x = clamp(8 + t * 84 + randomBetween(-0.8, 0.8), 5, 95);
+        const spread = reverse ? maxSpread - t * (maxSpread - minSpread) : minSpread + t * (maxSpread - minSpread);
+        const sign = i % 2 === 0 ? -1 : 1;
+        const residual = sign * (spread + randomBetween(-spread * 0.12, spread * 0.12));
+        const y = clamp(slope * x + intercept + residual, DATA_LIMITS.minY + 4, DATA_LIMITS.maxY - 4);
+        result.push({ x, y });
+      }
+      return result;
+    }
+
+    function buildPreset(name) {
+      switch (name) {
+        case "positive":
+          return makeLinearDataset({ slope: 0.72, intercept: 12, noise: 7, count: 18 });
+        case "negative":
+          return makeLinearDataset({ slope: -0.68, intercept: 88, noise: 7, count: 18 });
+        case "weak":
+          return makeLinearDataset({ slope: 0.18, intercept: 40, noise: 18, count: 18 });
+        case "outlier": {
+          const base = makeLinearDataset({ slope: 0.58, intercept: 16, noise: 5, count: 15 });
+          base.push({ x: 90, y: 16 });
+          return base;
+        }
+        case "fan":
+          return makeStructuredFanDataset({ slope: 0.3, intercept: 34, minSpread: 1, maxSpread: 34, count: 22 });
+        case "reverseFan":
+          return makeStructuredFanDataset({ slope: 0.3, intercept: 34, minSpread: 1, maxSpread: 34, count: 22, reverse: true });
+        default:
+          return makeLinearDataset({ slope: randomBetween(-0.8, 0.8), intercept: randomBetween(18, 72), noise: randomBetween(6, 16), count: 18 });
+      }
+    }
+
+    function setPoints(nextPoints) {
+      pts.length = 0;
+      nextPoints.forEach((point) => pts.push(point));
+      resetModelLineToBestFit();
+      render();
+    }
+
+    function setViewWindow(nextView) {
+      view.minX = nextView.minX;
+      view.maxX = nextView.maxX;
+      view.minY = nextView.minY;
+      view.maxY = nextView.maxY;
+    }
+
+    function resetView() {
+      setViewWindow({ ...DEFAULT_VIEW });
+      render();
+    }
+
+    function zoomView(factor, anchorWorld = null) {
+      const spanX = Math.max(view.maxX - view.minX, MIN_VIEW_SPAN);
+      const spanY = Math.max(view.maxY - view.minY, MIN_VIEW_SPAN);
+      const nextSpanX = Math.max(spanX * factor, MIN_VIEW_SPAN);
+      const nextSpanY = Math.max(spanY * factor, MIN_VIEW_SPAN);
+      const focusX = anchorWorld?.x ?? (view.minX + view.maxX) / 2;
+      const focusY = anchorWorld?.y ?? (view.minY + view.maxY) / 2;
+      const focusRatioX = spanX <= 1e-9 ? 0.5 : (focusX - view.minX) / spanX;
+      const focusRatioY = spanY <= 1e-9 ? 0.5 : (focusY - view.minY) / spanY;
+      setViewWindow({
+        minX: focusX - focusRatioX * nextSpanX,
+        maxX: focusX + (1 - focusRatioX) * nextSpanX,
+        minY: focusY - focusRatioY * nextSpanY,
+        maxY: focusY + (1 - focusRatioY) * nextSpanY,
+      });
+      render();
+    }
+
+    function dedupePoints(points) {
+      const unique = [];
+      points.forEach((point) => {
+        const exists = unique.some((candidate) => Math.abs(candidate.x - point.x) <= 1e-5 && Math.abs(candidate.y - point.y) <= 1e-5);
+        if (!exists) unique.push(point);
+      });
+      return unique;
+    }
+
+    function segmentLineIntersection(start, end, line) {
+      const valueStart = line.a * start.x + line.b * start.y - line.c;
+      const valueEnd = line.a * end.x + line.b * end.y - line.c;
+      if (Math.abs(valueStart) <= 1e-9 && Math.abs(valueEnd) <= 1e-9) return start;
+      if ((valueStart < -1e-9 && valueEnd < -1e-9) || (valueStart > 1e-9 && valueEnd > 1e-9)) return null;
+      const denominator = valueStart - valueEnd;
+      if (Math.abs(denominator) <= 1e-9) return null;
+      const t = valueStart / denominator;
+      return { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t };
+    }
+
+    function lineSegmentInView(model, currentView = view) {
+      if (!model) return null;
+      const line = { a: -model.m, b: 1, c: model.b };
+      const edges = [
+        [{ x: currentView.minX, y: currentView.minY }, { x: currentView.maxX, y: currentView.minY }],
+        [{ x: currentView.maxX, y: currentView.minY }, { x: currentView.maxX, y: currentView.maxY }],
+        [{ x: currentView.maxX, y: currentView.maxY }, { x: currentView.minX, y: currentView.maxY }],
+        [{ x: currentView.minX, y: currentView.maxY }, { x: currentView.minX, y: currentView.minY }],
+      ];
+      const intersections = [];
+      edges.forEach(([start, end]) => {
+        const point = segmentLineIntersection(start, end, line);
+        if (point) intersections.push(point);
+      });
+      const unique = dedupePoints(intersections).sort((a, b) => Math.abs(a.x - b.x) > 1e-5 ? a.x - b.x : a.y - b.y);
+      if (unique.length < 2) return null;
+      const worldStart = unique[0];
+      const worldEnd = unique[unique.length - 1];
+      const midpoint = { x: (worldStart.x + worldEnd.x) / 2, y: (worldStart.y + worldEnd.y) / 2 };
+      return {
+        worldStart, worldEnd, worldMidpoint: midpoint,
+        start: { x: mapX(worldStart.x, currentView), y: mapY(worldStart.y, currentView) },
+        end: { x: mapX(worldEnd.x, currentView), y: mapY(worldEnd.y, currentView) },
+        midpoint: { x: mapX(midpoint.x, currentView), y: mapY(midpoint.y, currentView) }
+      };
+    }
+
+    function drawGrid() {
+      const xTicks = niceTicks(view.minX, view.maxX, 8);
+      const yTicks = niceTicks(view.minY, view.maxY, 8);
+
+      xTicks.forEach((tick) => {
+        const x = mapX(tick);
+        addSvg("line", { x1: x, y1: P, x2: x, y2: H - P, stroke: "rgba(22, 33, 51, 0.1)", "stroke-width": 1 });
+        addSvg("text", { x, y: H - P + 24, fill: "rgba(22, 33, 51, 0.72)", "font-size": 12, "text-anchor": "middle" }, formatNumber(tick));
+      });
+
+      yTicks.forEach((tick) => {
+        const y = mapY(tick);
+        addSvg("line", { x1: P, y1: y, x2: W - P, y2: y, stroke: "rgba(22, 33, 51, 0.1)", "stroke-width": 1 });
+        addSvg("text", { x: P - 16, y: y + 4, fill: "rgba(22, 33, 51, 0.72)", "font-size": 12, "text-anchor": "end" }, formatNumber(tick));
+      });
+
+      const zeroX = clamp(mapX(0), P, W - P);
+      const zeroY = clamp(mapY(0), P, H - P);
+      addSvg("line", { x1: zeroX, y1: P, x2: zeroX, y2: H - P, stroke: "rgba(22, 33, 51, 0.56)", "stroke-width": 2 });
+      addSvg("line", { x1: P, y1: zeroY, x2: W - P, y2: zeroY, stroke: "rgba(22, 33, 51, 0.56)", "stroke-width": 2 });
+      addSvg("text", { x: W - P + 18, y: zeroY + 4, fill: "rgba(22, 33, 51, 0.82)", "font-size": 15, "font-weight": 700 }, "x");
+      addSvg("text", { x: zeroX - 4, y: P - 12, fill: "rgba(22, 33, 51, 0.82)", "font-size": 15, "font-weight": 700 }, "y");
+    }
+
+    function drawEmptyState() {
+      if (pts.length > 0) return;
+      addSvg("text", { x: W / 2, y: H / 2 - 4, fill: "rgba(22, 33, 51, 0.72)", "font-size": 18, "font-weight": 700, "text-anchor": "middle" }, "Click inside the graph to add points.");
+      addSvg("text", { x: W / 2, y: H / 2 + 20, fill: "rgba(81, 96, 118, 0.92)", "font-size": 13, "text-anchor": "middle" }, "Or load an example from the left panel.");
+    }
+
+    function drawResidualSegments(modelResult) {
+      if (!modelResult || !showResidualsInput.checked) return;
+      modelResult.residuals.forEach((point) => {
+        addSvg("line", {
+          x1: mapX(point.x), y1: mapY(point.y), x2: mapX(point.x), y2: mapY(point.yHat),
+          stroke: "rgba(224, 95, 53, 0.62)", "stroke-width": 2, "stroke-dasharray": "5 5"
+        });
+      });
+    }
+
+    function drawPredictionGuide(model, prediction) {
+      if (!model || !prediction) return;
+      const guideX = mapX(prediction.x);
+      const guideY = mapY(prediction.yHat);
+      addSvg("line", { x1: guideX, y1: H - P, x2: guideX, y2: guideY, stroke: "rgba(245, 166, 35, 0.85)", "stroke-width": 2, "stroke-dasharray": "8 8" });
+      addSvg("circle", { cx: guideX, cy: guideY, r: 6, fill: "#f5a623", stroke: "#fff7df", "stroke-width": 3 });
+      addSvg("text", { x: guideX + 10, y: guideY - 10, fill: "#8f5f00", "font-size": 13, "font-weight": 700 }, `(${formatNumber(prediction.x)}, ${formatNumber(prediction.yHat)})`);
+    }
+
+    function drawMeanPoint(summary) {
+      if (!summary || !showMeanPointInput.checked) return;
+      const x = mapX(summary.meanX);
+      const y = mapY(summary.meanY);
+      addSvg("line", { x1: x, y1: P, x2: x, y2: H - P, stroke: "rgba(31, 122, 140, 0.18)", "stroke-width": 1.5, "stroke-dasharray": "6 6" });
+      addSvg("line", { x1: P, y1: y, x2: W - P, y2: y, stroke: "rgba(31, 122, 140, 0.18)", "stroke-width": 1.5, "stroke-dasharray": "6 6" });
+      addSvg("circle", { cx: x, cy: y, r: 7, fill: "#1f7a8c", stroke: "#edf9fb", "stroke-width": 3 });
+      addSvg("text", { x: x + 10, y: y - 10, fill: "#1f7a8c", "font-size": 13, "font-weight": 700 }, "mean point");
+    }
+
+    function drawModelLine(model, modelResult) {
+      const segment = lineSegmentInView(model);
+      if (!segment) return;
+      addSvg("line", { x1: segment.start.x, y1: segment.start.y, x2: segment.end.x, y2: segment.end.y, stroke: "transparent", "stroke-width": 24, "data-drag-kind": "model-line", style: "cursor:grab" });
+      addSvg("line", { x1: segment.start.x, y1: segment.start.y, x2: segment.end.x, y2: segment.end.y, stroke: "#f5a623", "stroke-width": 4, "stroke-dasharray": "14 10", "stroke-linecap": "round", "pointer-events": "none" });
+      addSvg("circle", { cx: segment.midpoint.x, cy: segment.midpoint.y, r: 8, fill: "#f5a623", stroke: "#fff9e9", "stroke-width": 3, "data-drag-kind": "model-line", style: "cursor:grab" });
+      ["start", "end"].forEach((handle) => {
+        const point = handle === "start" ? segment.start : segment.end;
+        addSvg("circle", {
+          cx: point.x,
+          cy: point.y,
+          r: 16,
+          fill: "transparent",
+          stroke: "transparent",
+          "stroke-width": 1,
+          "data-drag-kind": "model-slope",
+          "data-handle": handle,
+          style: "cursor:grab"
+        });
+        addSvg("circle", {
+          cx: point.x,
+          cy: point.y,
+          r: 6.5,
+          fill: "#fff8e7",
+          stroke: "#f5a623",
+          "stroke-width": 3,
+          "pointer-events": "none"
+        });
+      });
+      addSvg("text", { x: segment.midpoint.x, y: segment.midpoint.y - 16, fill: "#8f5f00", "font-size": 14, "font-weight": 700, "text-anchor": "middle", "pointer-events": "none" }, modelResult ? `R^2 = ${formatNumber(modelResult.r2)}` : "model line");
+    }
+
+    function drawPoints() {
+      pts.forEach((point) => addSvg("circle", { cx: mapX(point.x), cy: mapY(point.y), r: 5.5, fill: "#2f6df6", stroke: "#eef3ff", "stroke-width": 2 }));
+    }
+
+    function drawResidualPlot(modelResult) {
+      residualPlot.innerHTML = "";
+      if (!modelResult) {
+        addResidualSvg("text", { x: RW / 2, y: RH / 2 - 4, fill: "rgba(22, 33, 51, 0.72)", "font-size": 17, "font-weight": 700, "text-anchor": "middle" }, "Residual plot appears once a line can be evaluated.");
+        return;
+      }
+
+      const maxResidual = Math.max(...modelResult.residuals.map((point) => Math.abs(point.error)), 1);
+      const residualView = { minX: view.minX, maxX: view.maxX, minY: -maxResidual * 1.15, maxY: maxResidual * 1.15 };
+      const xTicks = niceTicks(residualView.minX, residualView.maxX, 8);
+      const yTicks = niceTicks(residualView.minY, residualView.maxY, 4);
+
+      xTicks.forEach((tick) => {
+        const x = mapResidualX(tick, residualView);
+        addResidualSvg("line", { x1: x, y1: RP.top, x2: x, y2: RH - RP.bottom, stroke: "rgba(22, 33, 51, 0.1)", "stroke-width": 1 });
+        addResidualSvg("text", { x, y: RH - RP.bottom + 24, fill: "rgba(22, 33, 51, 0.72)", "font-size": 12, "text-anchor": "middle" }, formatNumber(tick));
+      });
+
+      yTicks.forEach((tick) => {
+        const y = mapResidualY(tick, residualView);
+        addResidualSvg("line", { x1: RP.left, y1: y, x2: RW - RP.right, y2: y, stroke: "rgba(22, 33, 51, 0.1)", "stroke-width": 1 });
+        addResidualSvg("text", { x: RP.left - 14, y: y + 4, fill: "rgba(22, 33, 51, 0.72)", "font-size": 12, "text-anchor": "end" }, formatNumber(tick));
+      });
+
+      const zeroX = clamp(mapResidualX(0, residualView), RP.left, RW - RP.right);
+      const zeroY = clamp(mapResidualY(0, residualView), RP.top, RH - RP.bottom);
+      addResidualSvg("line", { x1: zeroX, y1: RP.top, x2: zeroX, y2: RH - RP.bottom, stroke: "rgba(22, 33, 51, 0.4)", "stroke-width": 1.8 });
+      addResidualSvg("line", { x1: RP.left, y1: zeroY, x2: RW - RP.right, y2: zeroY, stroke: "rgba(224, 95, 53, 0.82)", "stroke-width": 2.3 });
+      addResidualSvg("text", { x: RW - RP.right + 16, y: zeroY + 4, fill: "rgba(22, 33, 51, 0.82)", "font-size": 14, "font-weight": 700 }, "x");
+      addResidualSvg("text", { x: zeroX - 4, y: RP.top - 6, fill: "rgba(22, 33, 51, 0.82)", "font-size": 14, "font-weight": 700 }, "residual");
+
+      modelResult.residuals.forEach((point) => addResidualSvg("circle", {
+        cx: mapResidualX(point.x, residualView),
+        cy: mapResidualY(point.error, residualView),
+        r: 5, fill: "#e05f35", stroke: "#fff3ef", "stroke-width": 2
+      }));
+    }
+
+    function computeVarianceTest(modelResult) {
+      if (!modelResult || modelResult.n < 4) return null;
+      const squaredResiduals = modelResult.residuals.map((point) => point.error * point.error);
+      const spreadRange = Math.max(...squaredResiduals) - Math.min(...squaredResiduals);
+      if (spreadRange <= 1e-9) {
+        return { informative: false, reason: "flat-spread" };
+      }
+
+      const auxFit = fitLeastSquares(modelResult.residuals.map((point) => ({ x: point.x, y: point.error * point.error })));
+      if (!auxFit) return null;
+
+      const lmStat = modelResult.n * Math.max(auxFit.r2, 0);
+      return {
+        informative: true,
+        lmStat,
+        pValue: chiSquareUpperTailDf1(lmStat),
+        slope: auxFit.m,
+      };
+    }
+
+    function updateResidualDiagnostic(modelResult) {
+      const varianceSignal = computeVarianceTest(modelResult);
+      if (!varianceSignal) {
+        setBadge(varianceBadge, "Waiting", "neutral");
+        varianceText.textContent = "Add at least four points with different x-values to see a non-constant-variance signal check.";
+        return;
+      }
+
+      if (!varianceSignal.informative) {
+        setBadge(varianceBadge, "Not informative", "neutral");
+        varianceText.textContent = "The residual sizes are nearly identical here, so the variance signal test does not add much beyond the plot.";
+        return;
+      }
+
+      const trendText = varianceSignal.slope >= 0
+        ? "residual spread grows as x increases"
+        : "residual spread shrinks as x increases";
+
+      if (varianceSignal.pValue !== null && varianceSignal.pValue < 0.05) {
+        setBadge(varianceBadge, "Signal detected", "warning");
+        varianceText.textContent = `This Breusch-Pagan-style check suggests non-constant variance for the current line: ${trendText}. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
+        return;
+      }
+
+      setBadge(varianceBadge, "No strong signal", "success");
+      varianceText.textContent = `This Breusch-Pagan-style check does not find a strong non-constant-variance signal for the current line. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
+    }
+
+    function describePattern(bestFit) {
+      if (!bestFit) return { badge: "Waiting", tone: "neutral", text: "Add points or load an example to describe the trend." };
+      const absR = Math.abs(bestFit.r);
+      let direction = "flat";
+      if (bestFit.m > 0.08) direction = "positive";
+      else if (bestFit.m < -0.08) direction = "negative";
+      let strength = "very weak";
+      if (absR >= 0.85) strength = "strong";
+      else if (absR >= 0.55) strength = "moderate";
+      else if (absR >= 0.25) strength = "weak";
+      const tone = absR >= 0.7 ? "success" : absR >= 0.35 ? "warning" : "danger";
+      const badge = direction === "flat" ? "Little trend" : `${strength[0].toUpperCase()}${strength.slice(1)} ${direction}`;
+      const text = direction === "flat" ? "The cloud does not lean strongly up or down, so the linear trend is limited." : `The point cloud suggests a ${strength} ${direction} relationship.`;
+      return { badge, tone, text };
+    }
+
+    function describeEquation(bestFit, currentResult) {
+      if (!currentResult) return { badge: "Not ready", tone: "neutral", text: "A line needs at least two points with different x-values." };
+      const currentText = `Current line: y = ${formatNumber(currentResult.m)}x ${currentResult.b >= 0 ? "+" : "-"} ${formatNumber(Math.abs(currentResult.b))}.`;
+      if (!bestFit || isAtBestFit(bestFit, currentResult)) return { badge: "Best fit", tone: "success", text: currentText };
+      return { badge: "Custom line", tone: "warning", text: `${currentText} Least-squares benchmark: y = ${formatNumber(bestFit.m)}x ${bestFit.b >= 0 ? "+" : "-"} ${formatNumber(Math.abs(bestFit.b))}.` };
+    }
+
+    function describeQuality(bestFit, currentResult) {
+      if (!bestFit || !currentResult) return { badge: "Waiting", tone: "neutral", text: "R-squared and MSE appear once the app can fit a line." };
+      if (isAtBestFit(bestFit, currentResult)) {
+        return { badge: "Optimal", tone: "success", text: `This line matches the least-squares solution. R^2 = ${formatNumber(currentResult.r2)} and avg squared residual = ${formatNumber(currentResult.mse)}.` };
+      }
+      const r2Gap = bestFit.r2 - currentResult.r2;
+      return {
+        badge: r2Gap <= 0.05 ? "Close to best" : "Off best fit",
+        tone: r2Gap <= 0.05 ? "warning" : "danger",
+        text: `Current line: R^2 = ${formatNumber(currentResult.r2)} and avg squared residual = ${formatNumber(currentResult.mse)}. Best fit: R^2 = ${formatNumber(bestFit.r2)} and avg squared residual = ${formatNumber(bestFit.mse)}.`
+      };
+    }
+
+    function describeStory(bestFit, currentResult, prediction) {
+      if (!currentResult) return { badge: "Explainable", tone: "neutral", text: "Use the line to tell a story about how y changes as x increases." };
+      const slopeWord = currentResult.m > 0 ? "increases" : currentResult.m < 0 ? "decreases" : "stays about the same";
+      const slopeAmount = formatNumber(Math.abs(currentResult.m));
+      let text = `For each 1-unit increase in x, the current line predicts y ${slopeWord} by about ${slopeAmount}.`;
+      if (prediction) text += ` At x = ${formatNumber(prediction.x)}, the predicted y-value is ${formatNumber(prediction.yHat)}.`;
+      if (bestFit && !isAtBestFit(bestFit, currentResult)) text += " This is a custom test line, so compare its residual plot to the least-squares benchmark.";
+      return { badge: "Say this", tone: "warning", text };
+    }
+
+    function updatePredictionUI(model, prediction) {
+      if (!model) {
+        predictYEl.textContent = "\u2014";
+        predictTextEl.textContent = "Add at least two points to unlock predictions.";
+        predictWarningEl.hidden = true;
+        predictWarningEl.textContent = "";
+        return;
+      }
+      if (!prediction) {
+        predictYEl.textContent = "\u2014";
+        predictTextEl.textContent = "Enter a numeric x-value to generate a prediction from the current line.";
+        predictWarningEl.hidden = true;
+        predictWarningEl.textContent = "";
+        return;
+      }
+      predictYEl.textContent = formatNumber(prediction.yHat);
+      predictTextEl.textContent = `The current line predicts y = ${formatNumber(prediction.yHat)} when x = ${formatNumber(prediction.x)}.`;
+      if (prediction.extrapolates) {
+        predictWarningEl.hidden = false;
+        predictWarningEl.textContent = `Warning: x = ${formatNumber(prediction.x)} is outside the observed data range of ${formatNumber(prediction.minX)} to ${formatNumber(prediction.maxX)}, so this prediction is an extrapolation.`;
+        return;
+      }
+      predictWarningEl.hidden = true;
+      predictWarningEl.textContent = "";
+    }
+
+    function updateReadout(bestFit, currentResult, prediction) {
+      const pattern = describePattern(bestFit);
+      setBadge(patternBadge, pattern.badge, pattern.tone);
+      patternText.textContent = pattern.text;
+
+      const equation = describeEquation(bestFit, currentResult);
+      setBadge(equationBadge, equation.badge, equation.tone);
+      equationText.textContent = equation.text;
+
+      const quality = describeQuality(bestFit, currentResult);
+      setBadge(qualityBadge, quality.badge, quality.tone);
+      qualityText.textContent = quality.text;
+
+      const story = describeStory(bestFit, currentResult, prediction);
+      setBadge(storyBadge, story.badge, story.tone);
+      storyText.textContent = story.text;
+    }
+
+    function updateCoachText(bestFit, currentResult) {
+      if (pts.length === 0) {
+        coachText.textContent = "Start by clicking two or three points to create your first dataset.";
+        return;
+      }
+      if (pts.length === 1) {
+        coachText.textContent = "Add a second point with a different x-value so the app can fit a line.";
+        return;
+      }
+      if (!bestFit) {
+        coachText.textContent = "Spread the x-values apart. A vertical stack of points cannot determine a useful slope.";
+        return;
+      }
+      if (presetSelect.value === "fan" || presetSelect.value === "reverseFan") {
+        coachText.textContent = "Watch the residual plot: the line can be centered well, but the spread changes across x, so the variance is not constant.";
+        return;
+      }
+      if (currentResult && !isAtBestFit(bestFit, currentResult)) {
+        coachText.textContent = "Drag the line back toward the cloud or use Snap line to best fit, then compare how R-squared and the residual plot improve.";
+        return;
+      }
+      const largestResidual = Math.max(...bestFit.residuals.map((point) => Math.abs(point.error)), 0);
+      const rmse = Math.sqrt(bestFit.mse);
+      if (largestResidual > rmse * 2.3 && pts.length >= 5) {
+        coachText.textContent = "One point may be pulling hard on the line. Compare the outlier's residual to the rest of the cloud.";
+        return;
+      }
+      if (bestFit.r2 > 0.85) {
+        coachText.textContent = "This is a strong pattern. Drag the line away from the optimum and see whether residual size or R-squared feels more sensitive.";
+        return;
+      }
+      if (bestFit.r2 < 0.35) {
+        coachText.textContent = "This pattern is weak. Load a stronger example next and compare the residual plot shape.";
+        return;
+      }
+      coachText.textContent = "Use the prediction box, then compare the predicted point to nearby observed points and their residuals.";
+    }
+
+    function updateAnovaTable(currentResult, bestFit) {
+      if (!currentResult || currentResult.n < 3 || currentResult.msError === null) {
+        anovaTableBody.innerHTML = `
+          <tr><td>Regression</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+          <tr><td>Error</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+          <tr><td>Total</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+        `;
+        anovaNote.textContent = "Add at least three points with different x-values to compute the regression ANOVA table.";
+        return;
+      }
+
+      anovaTableBody.innerHTML = `
+        <tr><td>Regression</td><td>${formatNumber(currentResult.ssr)}</td><td>${currentResult.dfRegression}</td><td>${formatNumber(currentResult.msRegression)}</td><td>${currentResult.fStat === null ? "\u2014" : (currentResult.fStat === Infinity ? "\u221E" : formatNumber(currentResult.fStat))}</td><td>${formatPValue(currentResult.pValue)}</td></tr>
+        <tr><td>Error</td><td>${formatNumber(currentResult.sse)}</td><td>${currentResult.dfError}</td><td>${currentResult.msError === null ? "\u2014" : formatNumber(currentResult.msError)}</td><td>\u2014</td><td>\u2014</td></tr>
+        <tr><td>Total</td><td>${formatNumber(currentResult.tss)}</td><td>${currentResult.dfTotal}</td><td>\u2014</td><td>\u2014</td><td>\u2014</td></tr>
+      `;
+
+      if (currentResult.r2 < 0) {
+        anovaNote.textContent = "This dragged line is worse than the mean-only model, so model SS is negative and the F statistic and p-value are not shown.";
+      } else if (bestFit && isAtBestFit(bestFit, currentResult)) {
+        anovaNote.textContent = (presetSelect.value === "fan" || presetSelect.value === "reverseFan")
+          ? "These are the least-squares ANOVA values. The residual plot still shows the non-constant variance pattern."
+          : "These are the standard least-squares ANOVA values for the fitted regression line.";
+      } else {
+        anovaNote.textContent = "These values now track the current draggable line. They are useful for comparison, but the usual ANOVA interpretation belongs to the least-squares line.";
+      }
+    }
+
+    function render() {
+      svg.innerHTML = "";
+      drawGrid();
+
+      const bestFit = fitLeastSquares(pts);
+      if (!bestFit) modelLine = null;
+      else if (!modelLine) modelLine = { m: bestFit.m, b: bestFit.b };
+
+      const currentModel = getCurrentModel(bestFit);
+      const currentResult = evaluateLine(pts, currentModel);
+      const prediction = getPrediction(currentModel);
+      const summary = bestFit ?? summarizeData(pts);
+
+      drawEmptyState();
+      drawResidualSegments(currentResult);
+      drawModelLine(currentModel, currentResult);
+      drawPredictionGuide(currentModel, prediction);
+      drawMeanPoint(summary);
+      drawPoints();
+      drawResidualPlot(currentResult);
+
+      updatePredictionUI(currentModel, prediction);
+      updateReadout(bestFit, currentResult, prediction);
+      updateCoachText(bestFit, currentResult);
+      updateResidualDiagnostic(currentResult);
+      updateAnovaTable(currentResult, bestFit);
+
+      undoBtn.disabled = pts.length === 0;
+      clearBtn.disabled = pts.length === 0;
+      snapBestFitBtn.disabled = !bestFit || isAtBestFit(bestFit, currentResult);
+
+      if (!dragState) svg.style.cursor = "crosshair";
+      else if (dragState.kind === "model-slope") svg.style.cursor = dragState.dragging ? "grabbing" : "grab";
+      else svg.style.cursor = dragState.dragging ? "grabbing" : "grab";
+    }
+
+    svg.addEventListener("pointerdown", (event) => {
+      const point = clientToSvgPoint(event);
+      if (!isInsidePlot(point.x, point.y)) return;
+
+      const dragTarget = event.target.closest("[data-drag-kind]");
+      const bestFit = fitLeastSquares(pts);
+      const currentModel = getCurrentModel(bestFit);
+
+      if (dragTarget && currentModel) {
+        if (dragTarget.dataset.dragKind === "model-line") {
+          dragState = {
+            kind: "model-line",
+            pointerId: event.pointerId,
+            startPoint: point,
+            startWorld: svgToWorld(point.x, point.y, { ...view }),
+            startLine: { ...currentModel },
+            dragging: false,
+          };
+        } else if (dragTarget.dataset.dragKind === "model-slope") {
+          const segment = lineSegmentInView(currentModel);
+          if (!segment) return;
+          const anchorWorld = dragTarget.dataset.handle === "start" ? segment.worldEnd : segment.worldStart;
+          dragState = {
+            kind: "model-slope",
+            pointerId: event.pointerId,
+            startPoint: point,
+            anchorWorld,
+            minDx: (view.maxX - view.minX) * MIN_SLOPE_DX_RATIO,
+            dragging: false,
+          };
+        }
+      } else {
+        dragState = {
+          kind: "view-pan",
+          pointerId: event.pointerId,
+          startPoint: point,
+          startWorld: svgToWorld(point.x, point.y, { ...view }),
+          startView: { ...view },
+          dragging: false,
+        };
+      }
+
+      if (!dragState) return;
+      if (typeof svg.setPointerCapture === "function") {
+        try { svg.setPointerCapture(event.pointerId); } catch {}
+      }
+    });
+
+    svg.addEventListener("pointermove", (event) => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const point = clientToSvgPoint(event);
+      const moved = Math.hypot(point.x - dragState.startPoint.x, point.y - dragState.startPoint.y);
+      if (!dragState.dragging && moved > DRAG_THRESHOLD) dragState.dragging = true;
+      if (!dragState.dragging) return;
+
+      if (dragState.kind === "view-pan") {
+        const pointInStartView = svgToWorld(point.x, point.y, dragState.startView);
+        const dx = pointInStartView.x - dragState.startWorld.x;
+        const dy = pointInStartView.y - dragState.startWorld.y;
+        setViewWindow({
+          minX: dragState.startView.minX - dx,
+          maxX: dragState.startView.maxX - dx,
+          minY: dragState.startView.minY - dy,
+          maxY: dragState.startView.maxY - dy,
+        });
+        render();
+        return;
+      }
+
+      if (dragState.kind === "model-line") {
+        const worldPoint = svgToWorld(point.x, point.y);
+        const dx = worldPoint.x - dragState.startWorld.x;
+        const dy = worldPoint.y - dragState.startWorld.y;
+        modelLine = { m: dragState.startLine.m, b: dragState.startLine.b + dy - dragState.startLine.m * dx };
+        render();
+        return;
+      }
+
+      if (dragState.kind === "model-slope") {
+        const worldPoint = svgToWorld(point.x, point.y);
+        let dx = worldPoint.x - dragState.anchorWorld.x;
+        if (Math.abs(dx) < dragState.minDx) dx = dx >= 0 ? dragState.minDx : -dragState.minDx;
+        const m = (worldPoint.y - dragState.anchorWorld.y) / dx;
+        const b = dragState.anchorWorld.y - m * dragState.anchorWorld.x;
+        modelLine = { m, b };
+        render();
+      }
+    });
+
+    window.addEventListener("pointerup", (event) => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const point = clientToSvgPoint(event);
+      const handledKind = dragState.kind;
+      const wasDragging = dragState.dragging;
+      if (typeof svg.releasePointerCapture === "function") {
+        try { svg.releasePointerCapture(dragState.pointerId); } catch {}
+      }
+      dragState = null;
+      if (handledKind === "view-pan" && !wasDragging && isInsidePlot(point.x, point.y)) {
+        pts.push({ x: unmapX(point.x), y: unmapY(point.y) });
+        resetModelLineToBestFit();
+      }
+      render();
+    });
+
+    svg.addEventListener("wheel", (event) => {
+      if (dragState || event.deltaY === 0) return;
+      const point = clientToSvgPoint(event);
+      if (!isInsidePlot(point.x, point.y)) return;
+      event.preventDefault();
+      const anchorWorld = svgToWorld(clamp(point.x, P, W - P), clamp(point.y, P, H - P));
+      zoomView(event.deltaY < 0 ? ZOOM_IN_FACTOR : ZOOM_OUT_FACTOR, anchorWorld);
+    });
+
+    function loadPreset() {
+      setViewWindow({ ...DEFAULT_VIEW });
+      setPoints(buildPreset(presetSelect.value));
+    }
+
+    presetSelect.addEventListener("change", loadPreset);
+    randomBtn.addEventListener("click", () => {
+      setViewWindow({ ...DEFAULT_VIEW });
+      setPoints(buildPreset("random"));
+    });
+    undoBtn.addEventListener("click", () => {
+      pts.pop();
+      resetModelLineToBestFit();
+      render();
+    });
+    clearBtn.addEventListener("click", () => {
+      pts.length = 0;
+      modelLine = null;
+      render();
+    });
+    zoomOutBtn.addEventListener("click", () => zoomView(ZOOM_OUT_FACTOR));
+    zoomInBtn.addEventListener("click", () => zoomView(ZOOM_IN_FACTOR));
+    resetViewBtn.addEventListener("click", resetView);
+    snapBestFitBtn.addEventListener("click", () => {
+      resetModelLineToBestFit();
+      render();
+    });
+    predictXInput.addEventListener("input", render);
+    showResidualsInput.addEventListener("change", render);
+    showMeanPointInput.addEventListener("change", render);
+
+    loadPreset();
+  </script>
+</body>
+</html>
