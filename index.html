@@ -139,8 +139,10 @@
     .control-panel, .graph-panel {
       padding: 24px;
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: 18px;
       align-content: start;
+      min-width: 0;
     }
 
     .panel-head, .card-head {
@@ -149,6 +151,8 @@
       gap: 16px;
       align-items: start;
     }
+
+    .panel-head > *, .card-head > * { min-width: 0; }
 
     .panel-head h2 {
       font-size: clamp(1.45rem, 2vw, 2rem);
