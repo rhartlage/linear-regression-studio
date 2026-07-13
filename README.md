@@ -17,7 +17,7 @@ Open `index.html` directly in a browser, or serve the folder with any static fil
 
 Once GitHub Pages is enabled for this repository, the app will be available at:
 
-`https://benhartlage.com/tools/linear-regression/`
+`https://tools.benhartlage.com/linear-regression/`
 
 Compatibility URL:
 
