@@ -8,6 +8,11 @@ Students can:
 - drag a custom regression line and compare it to least squares,
 - inspect residual plots, ANOVA values, and variance diagnostics,
 - discuss extrapolation warnings and non-constant variance examples.
+- reproduce a dataset from its seed and check a slope-direction prediction.
+
+The app uses no accounts, analytics, external fonts, storage, or transmitted
+student data. Graph results have live text equivalents and a print/static
+fallback.
 
 ## Local use
 

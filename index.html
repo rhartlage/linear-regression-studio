@@ -41,7 +41,7 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
     body {
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
       color: var(--ink);
       background:
         radial-gradient(circle at top left, rgba(240, 93, 61, 0.12), transparent 28%),
@@ -56,6 +56,20 @@
       margin: 0 auto;
       padding: 32px 20px 36px;
     }
+
+    .skip-link {
+      position: fixed;
+      z-index: 30;
+      left: 16px;
+      top: -80px;
+      padding: 12px 16px;
+      color: #000;
+      background: #fff;
+      border: 2px solid #000;
+    }
+
+    .skip-link:focus { top: 16px; }
+    .privacy-note { margin: -12px 0 18px; color: var(--ink-soft); font-size: .9rem; }
 
     .return-link {
       display: inline-flex;
@@ -102,7 +116,7 @@
 
     .hero h1, .panel-head h2, .card-head h3 {
       margin: 0;
-      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
     }
 
     .hero h1 {
@@ -460,6 +474,21 @@
       font-weight: 700;
     }
 
+    .practice-feedback {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-left: 5px solid var(--teal);
+      border-radius: 14px;
+      background: rgba(31, 122, 140, .1);
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .stewardship-card {
+      background: rgba(238, 244, 226, .94);
+      border-color: rgba(78, 103, 54, .34);
+    }
+
     @media (max-width: 1160px) {
       .workspace { grid-template-columns: minmax(0, 1fr); }
     }
@@ -471,9 +500,16 @@
       .objective-grid, .status-grid { grid-template-columns: 1fr; }
       .hero h1 { max-width: none; }
     }
+
+    @media print {
+      body { background: #fff; }
+      .return-row, .button-row, .plot-control-stack, .privacy-note { display: none; }
+      .panel { box-shadow: none; }
+    }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#studio">Skip to regression studio</a>
   <div class="page-shell">
     <header class="hero">
       <div>
@@ -485,7 +521,9 @@
       </p>
     </header>
 
-    <main class="workspace">
+    <p class="privacy-note">No sign-in, analytics, storage, external fonts, or transmitted student data.</p>
+
+    <main id="studio" class="workspace">
       <div class="control-column">
         <div class="return-row">
           <a class="return-link" href="https://tools.benhartlage.com/">Return to Stats &amp; Operations Analysis</a>
@@ -519,8 +557,14 @@
               </select>
             </label>
 
+            <label style="margin-top: 12px">
+              <span>Dataset seed</span>
+              <input id="datasetSeed" type="number" min="1" max="2147483646" value="2150" />
+            </label>
+
             <div class="button-row">
-              <button id="randomBtn" class="button" type="button">New random sample</button>
+              <button id="randomBtn" class="button" type="button">Use next seed</button>
+              <button id="rerunSeedBtn" class="button" type="button">Rerun this seed</button>
               <button id="undoBtn" class="button" type="button">Undo last point</button>
               <button id="clearBtn" class="button" type="button">Clear points</button>
             </div>
@@ -587,6 +631,30 @@
               <li>Drag the line away from best fit and compare how the residual plot changes.</li>
               <li>Use the fan-shape examples to discuss non-constant variance.</li>
             </ol>
+          </section>
+
+          <section class="card">
+            <div class="card-head compact">
+              <div>
+                <h3>Predict, then check</h3>
+                <p>State the fitted slope’s direction before reading the model interpretation.</p>
+              </div>
+            </div>
+            <label>
+              <span>As x increases, fitted y should...</span>
+              <select id="slopePrediction">
+                <option value="">Choose a prediction</option>
+                <option value="increase">increase</option>
+                <option value="decrease">decrease</option>
+                <option value="flat">stay approximately flat</option>
+              </select>
+            </label>
+            <div class="button-row">
+              <button id="checkSlopeBtn" class="button" type="button">Check prediction</button>
+            </div>
+            <div id="slopeFeedback" class="practice-feedback" role="status" aria-live="polite">
+              Make a prediction before checking the fitted slope.
+            </div>
           </section>
         </section>
       </div>
@@ -707,6 +775,23 @@
             </article>
           </div>
         </section>
+
+        <section class="card stewardship-card">
+          <div class="card-head compact">
+            <div>
+              <h3>Biblical/Ethical Stewardship and Integrity</h3>
+              <p>
+                Report association without implying causation, disclose influential points and
+                assumption concerns, and avoid extrapolating beyond the observed range. A useful
+                business recommendation must remain truthful about what the model cannot establish.
+              </p>
+            </div>
+          </div>
+          <p class="support-text">
+            Static fallback: every graph has a textual readout. Print this page or use Save as PDF;
+            your instructor can provide the same seeded dataset in an accessible worksheet.
+          </p>
+        </section>
       </section>
     </main>
   </div>
@@ -716,6 +801,11 @@
     const residualPlot = document.getElementById("residualPlot");
     const presetSelect = document.getElementById("presetSelect");
     const randomBtn = document.getElementById("randomBtn");
+    const rerunSeedBtn = document.getElementById("rerunSeedBtn");
+    const datasetSeedInput = document.getElementById("datasetSeed");
+    const slopePrediction = document.getElementById("slopePrediction");
+    const checkSlopeBtn = document.getElementById("checkSlopeBtn");
+    const slopeFeedback = document.getElementById("slopeFeedback");
     const undoBtn = document.getElementById("undoBtn");
     const clearBtn = document.getElementById("clearBtn");
     const zoomOutBtn = document.getElementById("zoomOutBtn");
@@ -899,8 +989,27 @@
       return values.reduce((sum, value) => sum + value, 0) / (values.length || 1);
     }
 
+    let randomSource = () => 0.5;
+
+    function seededRandom(seed) {
+      let stateValue = seed >>> 0;
+      return () => {
+        stateValue += 0x6d2b79f5;
+        let t = stateValue;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function resetRandomSource() {
+      const seed = Math.max(1, Math.floor(Number(datasetSeedInput.value) || 2150));
+      datasetSeedInput.value = String(seed);
+      randomSource = seededRandom(seed);
+    }
+
     function randomBetween(min, max) {
-      return min + Math.random() * (max - min);
+      return min + randomSource() * (max - min);
     }
 
     function niceTicks(min, max, targetTickCount) {
@@ -1745,15 +1854,19 @@
     });
 
     function loadPreset() {
+      resetRandomSource();
       setViewWindow({ ...DEFAULT_VIEW });
       setPoints(buildPreset(presetSelect.value));
+      slopePrediction.value = "";
+      slopeFeedback.textContent = "Make a prediction before checking the fitted slope.";
     }
 
     presetSelect.addEventListener("change", loadPreset);
     randomBtn.addEventListener("click", () => {
-      setViewWindow({ ...DEFAULT_VIEW });
-      setPoints(buildPreset("random"));
+      datasetSeedInput.value = String((Number(datasetSeedInput.value) || 2150) + 1);
+      loadPreset();
     });
+    rerunSeedBtn.addEventListener("click", loadPreset);
     undoBtn.addEventListener("click", () => {
       pts.pop();
       resetModelLineToBestFit();
@@ -1774,6 +1887,22 @@
     predictXInput.addEventListener("input", render);
     showResidualsInput.addEventListener("change", render);
     showMeanPointInput.addEventListener("change", render);
+    checkSlopeBtn.addEventListener("click", () => {
+      const fit = fitLeastSquares(pts);
+      if (!fit) {
+        slopeFeedback.textContent = "Add at least two points with different x-values before checking.";
+        return;
+      }
+      if (!slopePrediction.value) {
+        slopeFeedback.textContent = "Choose increase, decrease, or approximately flat before checking.";
+        return;
+      }
+      const actual = fit.m > 0.08 ? "increase" : fit.m < -0.08 ? "decrease" : "flat";
+      const directionText = actual === "increase" ? "increases" : actual === "decrease" ? "decreases" : "stays approximately flat";
+      slopeFeedback.textContent = slopePrediction.value === actual
+        ? `Correct. The least-squares slope is ${formatNumber(fit.m)}, so fitted y ${directionText} as x increases by one unit.`
+        : `Reconsider the sign of the slope. The least-squares slope is ${formatNumber(fit.m)}, so fitted y ${directionText} as x increases by one unit.`;
+    });
 
     loadPreset();
   </script>
