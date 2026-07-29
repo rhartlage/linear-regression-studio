@@ -26,8 +26,9 @@
       --panel: rgba(255, 252, 247, 0.86);
       --panel-strong: rgba(255, 250, 242, 0.95);
       --accent: #f05d3d;
-      --accent-deep: #c74b30;
+      --accent-deep: #9f361f;
       --teal: #1f7a8c;
+      --focus: #005fcc;
       --gold: #f5a623;
       --danger: #8d2b2b;
       --warning: #8f5f00;
@@ -68,7 +69,24 @@
       border: 2px solid #000;
     }
 
-    .skip-link:focus { top: 16px; }
+    .skip-link:focus {
+      top: 16px;
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .privacy-note { margin: -12px 0 18px; color: var(--ink-soft); font-size: .9rem; }
 
     .return-link {
@@ -94,8 +112,8 @@
     }
 
     .return-link:focus {
-      outline: 2px solid rgba(31, 122, 140, 0.35);
-      outline-offset: 2px;
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
     }
 
     .hero {
@@ -266,14 +284,30 @@
     }
 
     input:focus, select:focus, .button:focus, .plot-tool-button:focus {
-      outline: 2px solid rgba(31, 122, 140, 0.35);
-      outline-offset: 2px;
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
     }
 
     .objective-grid {
       display: grid;
       gap: 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .keyboard-control-group {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .keyboard-control-label {
+      margin: 0 0 10px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .keyboard-control-group .button-row {
+      margin-top: 12px;
     }
 
     .calc-card {
@@ -493,6 +527,22 @@
       .workspace { grid-template-columns: minmax(0, 1fr); }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .button:hover,
+      .plot-tool-button:hover {
+        transform: none;
+      }
+    }
+
     @media (max-width: 700px) {
       .page-shell { padding: 18px 14px 24px; }
       .control-panel, .graph-panel { padding: 18px; }
@@ -568,6 +618,24 @@
               <button id="undoBtn" class="button" type="button">Undo last point</button>
               <button id="clearBtn" class="button" type="button">Clear points</button>
             </div>
+
+            <div class="keyboard-control-group" role="group" aria-labelledby="pointEntryLabel">
+              <p id="pointEntryLabel" class="keyboard-control-label">Keyboard point entry</p>
+              <div class="objective-grid">
+                <label>
+                  <span>Point x (0 to 100)</span>
+                  <input id="pointX" type="number" min="0" max="100" step="any" value="50" />
+                </label>
+                <label>
+                  <span>Point y (0 to 100)</span>
+                  <input id="pointY" type="number" min="0" max="100" step="any" value="50" />
+                </label>
+              </div>
+              <div class="button-row">
+                <button id="addPointBtn" class="button" type="button">Add point</button>
+              </div>
+              <p class="support-text">This provides the same point-placement function as clicking the graph.</p>
+            </div>
           </section>
 
           <section class="card objective-card">
@@ -610,6 +678,24 @@
                 <input id="showMeanPoint" type="checkbox" checked />
                 <span>Show mean point</span>
               </label>
+            </div>
+
+            <div class="keyboard-control-group" role="group" aria-labelledby="lineControlLabel">
+              <p id="lineControlLabel" class="keyboard-control-label">Keyboard model-line controls</p>
+              <div class="objective-grid">
+                <label>
+                  <span>Line slope</span>
+                  <input id="lineSlope" type="number" step="any" />
+                </label>
+                <label>
+                  <span>Line intercept</span>
+                  <input id="lineIntercept" type="number" step="any" />
+                </label>
+              </div>
+              <div class="button-row">
+                <button id="applyLineBtn" class="button" type="button">Apply custom line</button>
+              </div>
+              <p class="support-text">Enter a slope and intercept to move or resize the line without dragging it or its endpoints.</p>
             </div>
           </section>
 
@@ -665,8 +751,8 @@
             <p class="section-kicker">Visualization</p>
             <h2>Data cloud, model line, and residuals</h2>
           </div>
-          <p class="graph-hint">
-            Click without dragging to add points. Drag the graph to pan, use the wheel or zoom buttons to scale, and drag the line or endpoints to test non-optimal fits.
+          <p id="graphInstructions" class="graph-hint">
+            Click without dragging to add points. Drag the graph to pan, use the wheel or zoom buttons to scale, and drag the line or endpoints to test non-optimal fits. Keyboard users can add points and set the line&apos;s slope and intercept in the setup controls.
           </p>
         </div>
 
@@ -691,7 +777,7 @@
         </div>
 
         <div class="plot-shell">
-          <svg id="chart" viewBox="0 0 800 500" role="img" aria-label="Scatter plot with a draggable model line and optional residuals"></svg>
+          <svg id="chart" viewBox="0 0 800 500" role="img" aria-label="Scatter plot with a draggable model line and optional residuals" aria-describedby="graphInstructions"></svg>
         </div>
 
         <div class="plot-caption">
@@ -774,6 +860,7 @@
               <p id="storyText">Use the line to tell a story about how y changes as x increases.</p>
             </article>
           </div>
+          <p id="regressionStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
         </section>
 
         <section class="card stewardship-card">
@@ -808,10 +895,16 @@
     const slopeFeedback = document.getElementById("slopeFeedback");
     const undoBtn = document.getElementById("undoBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const pointXInput = document.getElementById("pointX");
+    const pointYInput = document.getElementById("pointY");
+    const addPointBtn = document.getElementById("addPointBtn");
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const zoomInBtn = document.getElementById("zoomInBtn");
     const resetViewBtn = document.getElementById("resetViewBtn");
     const snapBestFitBtn = document.getElementById("snapBestFitBtn");
+    const lineSlopeInput = document.getElementById("lineSlope");
+    const lineInterceptInput = document.getElementById("lineIntercept");
+    const applyLineBtn = document.getElementById("applyLineBtn");
     const predictXInput = document.getElementById("predictX");
     const predictYEl = document.getElementById("predictY");
     const predictTextEl = document.getElementById("predictText");
@@ -832,6 +925,7 @@
     const qualityText = document.getElementById("qualityText");
     const storyBadge = document.getElementById("storyBadge");
     const storyText = document.getElementById("storyText");
+    const regressionStatus = document.getElementById("regressionStatus");
 
     const W = 800;
     const H = 500;
@@ -865,6 +959,24 @@
       if (!Number.isFinite(value)) return "0";
       const rounded = Math.abs(value) < 1e-9 ? 0 : roundTo(value, 4);
       return Number(rounded).toString();
+    }
+
+    function formatInputNumber(value) {
+      if (!Number.isFinite(value)) return "";
+      const rounded = Math.abs(value) < 1e-9 ? 0 : roundTo(value, 6);
+      return Number(rounded).toString();
+    }
+
+    function announceRegressionStatus(prefix) {
+      const bestFit = fitLeastSquares(pts);
+      if (!bestFit) {
+        regressionStatus.textContent = `${prefix} The dataset contains ${pts.length} ${pts.length === 1 ? "point" : "points"}. Add at least two points with different x-values to calculate a regression line.`;
+        return;
+      }
+
+      const currentModel = getCurrentModel(bestFit);
+      const currentResult = evaluateLine(pts, currentModel);
+      regressionStatus.textContent = `${prefix} The dataset contains ${pts.length} points. Current line: y equals ${formatNumber(currentModel.m)} x ${currentModel.b >= 0 ? "plus" : "minus"} ${formatNumber(Math.abs(currentModel.b))}. R squared ${formatNumber(currentResult.r2)}. Average squared residual ${formatNumber(currentResult.mse)}.`;
     }
 
     function formatPValue(value) {
@@ -1204,6 +1316,15 @@
       modelLine = bestFit ? { m: bestFit.m, b: bestFit.b } : null;
     }
 
+    function syncLineInputs(model) {
+      const hasModel = Boolean(model);
+      lineSlopeInput.disabled = !hasModel;
+      lineInterceptInput.disabled = !hasModel;
+      applyLineBtn.disabled = !hasModel;
+      lineSlopeInput.value = hasModel ? formatInputNumber(model.m) : "";
+      lineInterceptInput.value = hasModel ? formatInputNumber(model.b) : "";
+    }
+
     function isAtBestFit(bestFit, current) {
       if (!bestFit || !current) return false;
       return Math.abs(bestFit.m - current.m) <= 1e-6 && Math.abs(bestFit.b - current.b) <= 1e-6;
@@ -1287,6 +1408,59 @@
       nextPoints.forEach((point) => pts.push(point));
       resetModelLineToBestFit();
       render();
+    }
+
+    function addPointFromInputs() {
+      const x = Number(pointXInput.value);
+      const y = Number(pointYInput.value);
+
+      if (pointXInput.value.trim() === "" || !Number.isFinite(x) || x < DATA_LIMITS.minX || x > DATA_LIMITS.maxX) {
+        regressionStatus.textContent = `Enter an x-value from ${DATA_LIMITS.minX} through ${DATA_LIMITS.maxX}.`;
+        pointXInput.focus();
+        return;
+      }
+      if (pointYInput.value.trim() === "" || !Number.isFinite(y) || y < DATA_LIMITS.minY || y > DATA_LIMITS.maxY) {
+        regressionStatus.textContent = `Enter a y-value from ${DATA_LIMITS.minY} through ${DATA_LIMITS.maxY}.`;
+        pointYInput.focus();
+        return;
+      }
+
+      pts.push({ x, y });
+      resetModelLineToBestFit();
+      render();
+      announceRegressionStatus(`Point added at x ${formatNumber(x)}, y ${formatNumber(y)}.`);
+    }
+
+    function applyCustomLineFromInputs() {
+      const bestFit = fitLeastSquares(pts);
+      if (!bestFit) {
+        regressionStatus.textContent = "Add at least two points with different x-values before applying a custom line.";
+        return;
+      }
+
+      const slope = Number(lineSlopeInput.value);
+      const intercept = Number(lineInterceptInput.value);
+      if (lineSlopeInput.value.trim() === "" || !Number.isFinite(slope)) {
+        regressionStatus.textContent = "Enter a numeric slope.";
+        lineSlopeInput.focus();
+        return;
+      }
+      if (lineInterceptInput.value.trim() === "" || !Number.isFinite(intercept)) {
+        regressionStatus.textContent = "Enter a numeric intercept.";
+        lineInterceptInput.focus();
+        return;
+      }
+
+      const nextLine = { m: slope, b: intercept };
+      if (!lineSegmentInView(nextLine)) {
+        regressionStatus.textContent = "That line does not cross the current graph view. Adjust the slope or intercept, or reset the view, and try again.";
+        lineSlopeInput.focus();
+        return;
+      }
+
+      modelLine = nextLine;
+      render();
+      announceRegressionStatus("Custom line applied.");
     }
 
     function setViewWindow(nextView) {
@@ -1729,6 +1903,7 @@
       updateCoachText(bestFit, currentResult);
       updateResidualDiagnostic(currentResult);
       updateAnovaTable(currentResult, bestFit);
+      syncLineInputs(currentModel);
 
       undoBtn.disabled = pts.length === 0;
       clearBtn.disabled = pts.length === 0;
@@ -1837,11 +2012,18 @@
         try { svg.releasePointerCapture(dragState.pointerId); } catch {}
       }
       dragState = null;
+      let announcementPrefix = "";
       if (handledKind === "view-pan" && !wasDragging && isInsidePlot(point.x, point.y)) {
         pts.push({ x: unmapX(point.x), y: unmapY(point.y) });
         resetModelLineToBestFit();
+        announcementPrefix = "Point added from the graph.";
+      } else if (wasDragging && handledKind === "model-line") {
+        announcementPrefix = "Model line moved.";
+      } else if (wasDragging && handledKind === "model-slope") {
+        announcementPrefix = "Model line slope changed.";
       }
       render();
+      if (announcementPrefix) announceRegressionStatus(announcementPrefix);
     });
 
     svg.addEventListener("wheel", (event) => {
@@ -1859,6 +2041,7 @@
       setPoints(buildPreset(presetSelect.value));
       slopePrediction.value = "";
       slopeFeedback.textContent = "Make a prediction before checking the fitted slope.";
+      announceRegressionStatus(`${presetSelect.options[presetSelect.selectedIndex].text} loaded.`);
     }
 
     presetSelect.addEventListener("change", loadPreset);
@@ -1867,15 +2050,18 @@
       loadPreset();
     });
     rerunSeedBtn.addEventListener("click", loadPreset);
+    addPointBtn.addEventListener("click", addPointFromInputs);
     undoBtn.addEventListener("click", () => {
       pts.pop();
       resetModelLineToBestFit();
       render();
+      announceRegressionStatus("Last point removed.");
     });
     clearBtn.addEventListener("click", () => {
       pts.length = 0;
       modelLine = null;
       render();
+      announceRegressionStatus("All points cleared.");
     });
     zoomOutBtn.addEventListener("click", () => zoomView(ZOOM_OUT_FACTOR));
     zoomInBtn.addEventListener("click", () => zoomView(ZOOM_IN_FACTOR));
@@ -1883,7 +2069,9 @@
     snapBestFitBtn.addEventListener("click", () => {
       resetModelLineToBestFit();
       render();
+      announceRegressionStatus("Line snapped to the least-squares fit.");
     });
+    applyLineBtn.addEventListener("click", applyCustomLineFromInputs);
     predictXInput.addEventListener("input", render);
     showResidualsInput.addEventListener("change", render);
     showMeanPointInput.addEventListener("change", render);
