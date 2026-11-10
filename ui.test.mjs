@@ -6,7 +6,7 @@ const {chromium}=await import(process.env.REGRESSION_PLAYWRIGHT_MODULE || 'playw
 let browser,server,base;
 before(async()=>{
   if(process.env.REGRESSION_TEST_URL) base=process.env.REGRESSION_TEST_URL;
-  else { const root=new URL('./',import.meta.url);server=createServer(async(req,res)=>{try{let path=new URL(req.url,'http://localhost').pathname;if(path.endsWith('/'))path+='index.html';if(path.includes('..'))throw new Error('invalid');const content=await readFile(new URL('.'+path,root));res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(content);}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${server.address().port}`;}
+  else { const root=new URL(process.env.REGRESSION_TEST_ROOT||'./',import.meta.url);server=createServer(async(req,res)=>{try{let path=new URL(req.url,'http://localhost').pathname;if(path.endsWith('/'))path+='index.html';if(path.includes('..'))throw new Error('invalid');const content=await readFile(new URL('.'+path,root));res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(content);}catch{res.writeHead(404);res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${server.address().port}${process.env.REGRESSION_TEST_PATH||'/'}`;}
   browser=await chromium.launch({headless:true,...(process.env.REGRESSION_CHROMIUM_PATH?{executablePath:process.env.REGRESSION_CHROMIUM_PATH}:{})});
 });
 after(async()=>{await browser?.close();if(server)await new Promise(r=>server.close(r));});

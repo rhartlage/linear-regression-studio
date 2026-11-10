@@ -19,7 +19,7 @@ Formal inference always uses fitted least squares. Moving a comparison line does
 
 `npm test` runs independent numerical fixtures and CSV/data tests. The reference generator in `tests/` uses NumPy LAPACK SVD and SciPy, not the production engine. See `tests/README.md` for provenance. `npm run check` checks JavaScript syntax.
 
-`npm run test:ui` runs local headless Playwright tests. Supply `REGRESSION_PLAYWRIGHT_MODULE` (an installed module specifier or file URL) and `REGRESSION_CHROMIUM_PATH` if Playwright/Chromium are not on the default path. `REGRESSION_TEST_URL` optionally tests a composed/hosted candidate. `REGRESSION_SCREENSHOT_DIR` enables desktop/mobile screenshots. There are no runtime dependencies or build step.
+`npm run test:ui` runs local headless Playwright tests. Supply `REGRESSION_PLAYWRIGHT_MODULE` (an installed module specifier or file URL) and `REGRESSION_CHROMIUM_PATH` if Playwright/Chromium are not on the default path. `REGRESSION_TEST_URL` optionally tests a hosted candidate. For an integrated local build, set `REGRESSION_TEST_ROOT` to the trailing-slash file URL of its static root and `REGRESSION_TEST_PATH` to `/linear-regression/`; the suite serves it within the same process. `REGRESSION_SCREENSHOT_DIR` enables desktop/mobile screenshots. There are no runtime dependencies or build step.
 
 The hosted shell must copy all five runtime files: `index.html`, `regression-math.js`, `workbench-data.js`, `workbench.js`, and `workbench.css`. Update the canonical source commit and file list together in `tool-sources.json`; integrate into the latest hosted shell, not an older release.
 
