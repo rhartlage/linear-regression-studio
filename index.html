@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Linear Regression Studio</title>
+  <title>Regression Workbench</title>
   <meta
     name="description"
-    content="Build datasets, compare fitted lines, and explore residual, ANOVA, and variance diagnostics in an interactive regression studio."
+    content="Import data, build simple and multiple regression models, compare terms and interactions, and explore ANOVA, coefficient tests, residuals, and sensitivity."
   />
   <link rel="canonical" href="https://tools.benhartlage.com/linear-regression/" />
-  <meta property="og:title" content="Linear Regression Studio" />
+  <meta property="og:title" content="Regression Workbench" />
   <meta
     property="og:description"
-    content="An interactive business statistics studio for regression lines, residuals, ANOVA, and variance diagnostics."
+    content="A browser-local regression workbench for data import, model selection, interactions, ANOVA, residual diagnostics, and sensitivity."
   />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://tools.benhartlage.com/linear-regression/" />
@@ -557,28 +557,106 @@
       .panel { box-shadow: none; }
     }
   </style>
+  <link rel="stylesheet" href="workbench.css" />
 </head>
 <body>
   <a class="skip-link" href="#studio">Skip to regression studio</a>
   <div class="page-shell">
     <header class="hero">
       <div>
-        <p class="eyebrow">Regression Studio</p>
-        <h1>Place the data. Read the line. Explain the relationship.</h1>
+        <p class="eyebrow">Business Statistics · Regression</p>
+        <h1>Build the model.<br>Explain what changes.</h1>
       </div>
       <p class="hero-copy">
-        Students can build or load datasets, inspect a best-fit line, and compare the formal regression fit to custom lines they drag by hand.
+        Import data, investigate assumptions, and build a regression model one decision at a time.
       </p>
     </header>
 
     <p class="privacy-note">No sign-in, analytics, storage, external fonts, or transmitted student data.</p>
 
-    <main id="studio" class="workspace">
-      <div class="control-column">
-        <div class="return-row">
-          <a class="return-link" href="https://tools.benhartlage.com/">Return to Stats &amp; Operations Analysis</a>
-        </div>
+    <nav class="mode-nav" aria-label="Choose a regression workspace">
+      <button id="builderMode" type="button" aria-pressed="true" aria-controls="modelStudio">Data &amp; model builder</button>
+      <button id="playgroundMode" type="button" aria-pressed="false" aria-controls="studio">Line playground</button>
+      <a href="https://tools.benhartlage.com/">All classroom tools</a>
+    </nav>
+    <main id="modelStudio" class="workbench" aria-label="Regression model builder">
+      <section class="card data-card">
+        <div class="wb-heading"><div><p class="section-kicker">1 · Choose your data</p><h2>A question worth modeling</h2></div><span class="wb-tag">Runs on your device</span></div>
+        <div class="wb-example-row"><label><span>Classroom example</span><select id="wbExample"><option value="sales">Store sales · multiple predictors</option><option value="advertising">Advertising · simple regression</option><option value="interaction">Advertising × price · interaction</option><option value="curvature">Production speed · curvature</option><option value="threeway">Three-factor interaction</option></select></label><button id="wbLoadExample" class="button" type="button">Load example</button><button id="wbDownload" class="button" type="button">Download data CSV</button></div>
+        <p id="wbDataDescription" class="support-text"></p>
+        <details id="wbImportDetails"><summary>Import a CSV or paste from Excel</summary><p class="support-text">First row: unique column names. Remaining rows: numeric data. Comma, tab, and semicolon separators are supported. Files stay in this browser; nothing is uploaded. Up to 5,000 rows and 20 columns.</p>
+          <label class="wb-file"><span>Choose a local data file</span><input id="wbFile" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" /></label>
+          <label><span>Or paste your table</span><textarea id="wbPaste" rows="5" placeholder="Sales,Advertising,Price&#10;120,10,8&#10;135,15,7"></textarea></label>
+          <div class="button-row"><button id="wbImport" class="button primary" type="button">Preview pasted data</button></div>
+          <p id="wbImportStatus" class="support-text" role="status" aria-live="polite"></p>
+        </details>
+        <details><summary>Data preview <span id="wbRowCount"></span></summary><div class="table-wrap" tabindex="0" role="region" aria-label="Imported data preview"><table class="wb-table" id="wbPreview"></table></div></details>
+        <div class="wb-variable-grid"><label><span>Response (y)</span><select id="wbResponse"></select></label><fieldset><legend>Candidate predictors (x)</legend><div id="wbPredictors" class="wb-checkboxes"></div></fieldset></div>
+        <p id="wbRowsNote" class="support-text"></p>
+        <div class="button-row"><button id="wbApplyVariables" class="button primary" type="button">Use these variables</button></div>
+      </section>
 
+      <div class="wb-grid">
+        <section class="card wb-terms-panel">
+          <p class="section-kicker">2 · Make a modeling decision</p><h2>Build, remove, compare</h2>
+          <p class="support-text">Choose one change, then inspect the new fit. Each row's p-value asks what that term adds after accounting for the others.</p>
+          <div class="button-row"><button id="wbStartEmpty" class="button" type="button">Start forward: intercept only</button><button id="wbStartFull" class="button" type="button">Start backward: all candidates</button></div>
+          <details class="wb-term-options"><summary>Candidate terms &amp; hierarchy</summary>
+            <div class="wb-checkboxes"><label><input id="wbSquares" type="checkbox" /> Squared terms (x²)</label><label><input id="wbPairs" type="checkbox" /> Two-way interactions (A × B)</label><label><input id="wbTriples" type="checkbox" /> Three-way interactions (A × B × C)</label></div>
+            <p class="support-text">Hierarchy stays on: an interaction retains its component terms, and a square retains its main effect. A three-way interaction includes all three pairwise interactions. Up to 40 candidate terms; choose at most six predictors for higher-order terms.</p>
+            <button id="wbRebuildTerms" class="button" type="button">Update candidate terms</button>
+          </details>
+          <div class="wb-threshold"><label><span>Entry p threshold</span><input id="wbEntry" type="number" min="0.001" max="0.5" step="0.01" value="0.05" /></label><label><span>Removal p threshold</span><input id="wbRemoval" type="number" min="0.001" max="0.5" step="0.01" value="0.10" /></label></div>
+          <div class="button-row"><button id="wbSuggest" class="button" type="button">Suggest a next step</button><button id="wbUndo" class="button" type="button" disabled>Undo model change</button></div>
+          <p id="wbSuggestion" class="wb-note">You choose the model. A threshold is a guide, not a substitute for the research question.</p>
+          <h3>Included terms <span id="wbIncludedCount" class="wb-count"></span></h3>
+          <div id="wbIncluded" class="wb-term-list"></div>
+          <h3>Available terms <span id="wbAvailableCount" class="wb-count"></span></h3>
+          <div id="wbAvailable" class="wb-term-list"></div>
+          <p class="support-text">Available p-values use the proposed model. When hierarchy adds several terms together, the displayed p-value is their joint partial F-test.</p>
+        </section>
+
+        <section class="card wb-results" aria-label="Current regression results">
+          <p class="section-kicker">3 · Read the evidence</p><h2>The current model</h2>
+          <p id="wbStatus" class="wb-status" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></p>
+          <div id="wbMetrics" class="wb-metrics"></div>
+          <div class="wb-equation"><p class="status-label">Fitted equation</p><p id="wbEquation"></p><p id="wbCentering" class="support-text"></p></div>
+          <p id="wbWarnings" class="wb-note warning-text"></p>
+          <h3>Coefficient t-tests</h3><p class="support-text">Two-sided tests of coefficient = 0, conditional on the other included terms. Interactions make main effects conditional on the stated centering values.</p>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Coefficient estimates and tests"><table id="wbCoefficients" class="wb-table"></table></div>
+          <h3>ANOVA</h3><div class="table-wrap" tabindex="0" role="region" aria-label="Model ANOVA"><table id="wbAnova" class="wb-table"></table></div>
+          <p class="support-text">The overall F-test compares this fitted model with an intercept-only model. Conventional t/F inference assumes independent errors, a correct mean model, constant error variance, and normal errors for exact small-sample tests.</p>
+          <details><summary>Model-change history</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Model change history"><table id="wbHistory" class="wb-table"></table></div></details>
+          <p class="wb-note">Model selection is exploratory. Repeated p-value screening can overfit; final p-values and intervals do not account for that selection. Compare adjusted R² and residual diagnostics, and validate on new data. Association is not causation.</p>
+        </section>
+      </div>
+
+      <section id="wbPredictionSection" class="card">
+        <div class="wb-heading"><div><p class="section-kicker">4 · See the model</p><h2>Predictions &amp; sensitivity</h2></div><label><span>Horizontal-axis predictor</span><select id="wbPlotX"></select></label></div>
+        <p class="support-text">The model slice varies the selected predictor while holding all others at the reference settings below. Raw observations may not lie near this slice because their other predictor values differ.</p>
+        <div id="wbReferenceInputs" class="wb-reference-inputs"></div>
+        <p id="wbPrediction" class="wb-note"></p>
+        <div class="wb-plot-grid">
+          <figure><figcaption id="wbSliceCaption">Observed data &amp; model slice</figcaption><svg id="wbSlice" viewBox="0 0 640 340" role="img" aria-labelledby="wbSliceCaption" aria-describedby="wbSliceText"></svg><p id="wbSliceText" class="support-text"></p></figure>
+          <figure><figcaption id="wbTornadoCaption">Prediction-sensitivity tornado</figcaption><svg id="wbTornado" viewBox="0 0 640 340" role="img" aria-labelledby="wbTornadoCaption" aria-describedby="wbTornadoText"></svg><p id="wbTornadoText" class="support-text"></p></figure>
+        </div>
+        <details><summary>Compare an externally calculated simple-regression line</summary><p class="support-text">For a one-predictor model, enter a slope and intercept in original units. The comparison line is visual only; inference always describes the fitted least-squares model.</p><div class="wb-threshold"><label><span>Comparison slope</span><input id="wbOverlaySlope" type="number" step="any" value="1" /></label><label><span>Comparison intercept</span><input id="wbOverlayIntercept" type="number" step="any" value="0" /></label></div><label class="wb-check"><input id="wbOverlay" type="checkbox" /> Show comparison line</label><p id="wbOverlayNote" class="support-text"></p></details>
+        <details><summary>Tornado values &amp; interpretation</summary><p class="support-text">For each original predictor, vary it from its observed minimum to maximum while holding other inputs fixed. Recompute interaction and squared terms, including any interior quadratic turning point. Bars span minimum to maximum predicted y, ranked by width. This is conditional sensitivity, not significance or causal importance. With correlated predictors, these combinations may be unrealistic.</p><div class="table-wrap" tabindex="0" role="region" aria-label="Sensitivity values"><table id="wbTornadoTable" class="wb-table"></table></div></details>
+      </section>
+
+      <section id="wbDiagnosticSection" class="card"><p class="section-kicker">5 · Challenge the assumptions</p><h2>Residual diagnostics</h2><p class="support-text">The normal probability plot checks the shape of residuals, not whether x or y is normally distributed. A roughly straight pattern supports the normal-error assumption; it does not prove it. Curves, changing spread, and unusual observations deserve investigation.</p>
+        <div class="wb-plot-grid">
+          <figure><figcaption id="wbFittedCaption">Observed versus fitted</figcaption><svg id="wbFitted" viewBox="0 0 640 340" role="img" aria-labelledby="wbFittedCaption" aria-describedby="wbFittedText"></svg><p id="wbFittedText" class="support-text"></p></figure>
+          <figure><figcaption id="wbResidualCaption">Residuals versus fitted</figcaption><svg id="wbResidual" viewBox="0 0 640 340" role="img" aria-labelledby="wbResidualCaption" aria-describedby="wbResidualText"></svg><p id="wbResidualText" class="support-text"></p></figure>
+          <figure><figcaption id="wbQQCaption">Normal probability plot of residuals</figcaption><svg id="wbQQ" viewBox="0 0 640 340" role="img" aria-labelledby="wbQQCaption" aria-describedby="wbQQText"></svg><p id="wbQQText" class="support-text"></p></figure>
+          <figure><figcaption id="wbOrderCaption">Residuals versus row order</figcaption><svg id="wbOrder" viewBox="0 0 640 340" role="img" aria-labelledby="wbOrderCaption" aria-describedby="wbOrderText"></svg><p id="wbOrderText" class="support-text">Only interpret this as a time/order diagnostic when row order reflects the order of observation.</p></figure>
+        </div>
+        <details><summary>Observation-level results</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Predictions residuals and leverage"><table id="wbObservations" class="wb-table"></table></div><p class="support-text">Leverage measures unusual predictor combinations. Investigate unusual observations in context; do not remove them just to improve a fit.</p></details>
+      </section>
+      <footer class="wb-footer">Browser-local classroom tool · No account or retained data · Print or save as PDF for a record of your model. Numeric predictors only; encode categorical predictors deliberately before import.</footer>
+    </main>
+    <main id="studio" class="workspace" hidden>
+      <div class="control-column">
         <section class="panel control-panel">
           <div class="panel-head">
             <div>
@@ -788,7 +866,7 @@
           <div class="card-head compact">
             <div>
               <h3>ANOVA table</h3>
-              <p>This table updates for the current draggable line. When the line is not at least squares, treat it as a teaching comparison rather than a formal inference table.</p>
+              <p>Formal inference always describes the fitted least-squares line. Dragging a comparison line changes its error readout, not this ANOVA table.</p>
             </div>
           </div>
 
@@ -810,6 +888,11 @@
           <p id="anovaNote" class="support-text">Add at least three points with different x-values to compute the regression ANOVA table.</p>
         </section>
 
+        <section class="card">
+          <h3>Least-squares coefficient tests</h3>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Simple regression coefficient tests"><table id="simpleCoefficients" class="wb-table"></table></div>
+          <figure><figcaption id="simpleQQCaption">Normal probability plot of fitted residuals</figcaption><svg id="simpleQQ" viewBox="0 0 640 340" role="img" aria-labelledby="simpleQQCaption" aria-describedby="simpleQQText"></svg><p id="simpleQQText" class="support-text"></p></figure>
+        </section>
         <section class="card status-card">
           <div class="card-head compact">
             <div>
@@ -883,6 +966,9 @@
     </main>
   </div>
 
+  <script src="regression-math.js"></script>
+  <script src="workbench-data.js"></script>
+  <script src="workbench.js"></script>
   <script>
     const svg = document.getElementById("chart");
     const residualPlot = document.getElementById("residualPlot");
@@ -956,7 +1042,7 @@
     }
 
     function formatNumber(value) {
-      if (!Number.isFinite(value)) return "0";
+      if (!Number.isFinite(value)) return "—";
       const rounded = Math.abs(value) < 1e-9 ? 0 : roundTo(value, 4);
       return Number(rounded).toString();
     }
@@ -1713,12 +1799,12 @@
 
       if (varianceSignal.pValue !== null && varianceSignal.pValue < 0.05) {
         setBadge(varianceBadge, "Signal detected", "warning");
-        varianceText.textContent = `This Breusch-Pagan-style check suggests non-constant variance for the current line: ${trendText}. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
+        varianceText.textContent = `This Breusch-Pagan-style check suggests non-constant variance for the fitted least-squares line: ${trendText}. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
         return;
       }
 
       setBadge(varianceBadge, "No strong signal", "success");
-      varianceText.textContent = `This Breusch-Pagan-style check does not find a strong non-constant-variance signal for the current line. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
+      varianceText.textContent = `This Breusch-Pagan-style check does not find a strong non-constant-variance signal for the fitted least-squares line. LM = ${formatNumber(varianceSignal.lmStat)}, p = ${formatPValue(varianceSignal.pValue)}.`;
     }
 
     function describePattern(bestFit) {
@@ -1901,8 +1987,9 @@
       updatePredictionUI(currentModel, prediction);
       updateReadout(bestFit, currentResult, prediction);
       updateCoachText(bestFit, currentResult);
-      updateResidualDiagnostic(currentResult);
-      updateAnovaTable(currentResult, bestFit);
+      updateResidualDiagnostic(bestFit);
+      updateAnovaTable(bestFit, bestFit);
+      RegressionWorkbench.updateSimple(pts);
       syncLineInputs(currentModel);
 
       undoBtn.disabled = pts.length === 0;

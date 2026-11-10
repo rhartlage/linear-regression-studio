@@ -1,0 +1,9 @@
+{
+  "name": "regression-workbench",
+  "private": true,
+  "scripts": {
+    "test": "node --test regression.test.cjs data.test.cjs",
+    "test:ui": "node --test ui.test.mjs",
+    "check": "node --check regression-math.js && node --check workbench-data.js && node --check workbench.js"
+  }
+}
