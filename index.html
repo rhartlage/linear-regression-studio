@@ -584,8 +584,14 @@
         <div class="wb-heading"><div><p class="section-kicker">1 · Choose your data</p><h2>A question worth modeling</h2></div><span class="wb-tag">Runs on your device</span></div>
         <div class="wb-example-row"><label><span>Classroom example</span><select id="wbExample"><option value="sales">Store sales · multiple predictors</option><option value="advertising">Advertising · simple regression</option><option value="interaction">Advertising × price · interaction</option><option value="curvature">Production speed · curvature</option><option value="threeway">Three-factor interaction</option></select></label><button id="wbLoadExample" class="button" type="button">Load example</button><button id="wbDownload" class="button" type="button">Download data CSV</button></div>
         <p id="wbDataDescription" class="support-text"></p>
-        <details id="wbImportDetails"><summary>Import a CSV or paste from Excel</summary><p class="support-text">First row: unique column names. Remaining rows: numeric data. Comma, tab, and semicolon separators are supported. Files stay in this browser; nothing is uploaded. Up to 5,000 rows and 20 columns.</p>
-          <label class="wb-file"><span>Choose a local data file</span><input id="wbFile" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" /></label>
+        <details id="wbImportDetails"><summary>Import CSV / Excel or paste a table</summary><p class="support-text">First row: unique column names. Remaining rows: numeric data. Comma, tab, and semicolon separators are supported. Files stay in this browser; nothing is uploaded. Up to 5,000 rows and 20 columns.</p>
+          <label class="wb-file"><span>Choose a local data file</span><input id="wbFile" type="file" accept=".xlsx,.csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain" /></label>
+          <div id="wbWorkbook" hidden>
+            <label><span>Worksheet</span><select id="wbSheet"></select></label>
+            <label><span>Cell range including column headers</span><input id="wbRange" type="text" placeholder="A1:C13" /></label>
+            <p class="support-text">Choose only the raw observations, not summary output. Excel files use saved cell values; formulas are not recalculated. Save the workbook in Excel first. Dates, errors, and Boolean cells are rejected. Select within the first 5,002 worksheet rows.</p>
+            <button id="wbImportWorkbook" class="button primary" type="button">Preview worksheet range</button>
+          </div>
           <label><span>Or paste your table</span><textarea id="wbPaste" rows="5" placeholder="Sales,Advertising,Price&#10;120,10,8&#10;135,15,7"></textarea></label>
           <div class="button-row"><button id="wbImport" class="button primary" type="button">Preview pasted data</button></div>
           <p id="wbImportStatus" class="support-text" role="status" aria-live="polite"></p>
@@ -968,6 +974,8 @@
 
   <script src="regression-math.js"></script>
   <script src="workbench-data.js"></script>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="workbook-data.js"></script>
   <script src="workbench.js"></script>
   <script>
     const svg = document.getElementById("chart");

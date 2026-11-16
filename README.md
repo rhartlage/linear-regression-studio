@@ -48,3 +48,13 @@ Once GitHub Pages is enabled for this repository, the app will be available at:
 Compatibility URL:
 
 `https://rhartlage.github.io/linear-regression-studio/`
+
+### Importing Excel workbooks
+
+CSV is the simplest reusable data format: a unique header row, one observation per row, one variable per column. CSV, TSV, semicolon-separated text, and pasted Excel tables continue to work.
+
+For an existing `.xlsx` lecture workbook, choose the local file, select its worksheet, and enter a rectangular range **including the header row** (for example `B4:D20`). Select raw observations, not a regression summary or coefficient table. Preview the range, choose the response and candidate predictors, then use those variables. Download data CSV exports the selected dataset for reuse. JSON is not required.
+
+Files remain in the browser; the importer does not upload, store, or transmit workbook contents. Maximum file size is 3 MB. A selected table supports 2–20 columns and up to 5,000 observations within the first 5,002 worksheet rows. Completely blank rows are omitted; source worksheet row numbers are retained. Missing and nonnumeric observations follow the existing explicit row-exclusion rules. Dates, Booleans, and Excel errors are rejected. Formula cells use **saved cached results**, not recalculation: save in Excel before import. Password-protected workbooks and legacy `.xls` are not supported by this UI; export to CSV instead.
+
+The XLSX reader is vendored SheetJS CE 0.20.3 from the official distribution, with its Apache-2.0 license in `vendor/LICENSE.sheetjs`. No runtime CDN request is made. `workbook.test.cjs` exercises synthetic workbook ranges, header validation, row numbering, missing data, and rejected cell types. UI coverage includes the file → worksheet/range → model workflow.

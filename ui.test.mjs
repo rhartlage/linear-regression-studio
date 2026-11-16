@@ -69,3 +69,20 @@ test('legacy line playground, keyboard controls, seeds and comparison line keep 
 test('desktop and mobile have no page overflow; keyboard activation and repeated switching work',async()=>{
   for(const width of [1440,1024,768,390,320]){const page=await open(width);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`overflow ${width}`);await page.locator('#playgroundMode').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#studio').isVisible(),true);await page.locator('#builderMode').focus();await page.keyboard.press('Space');assert.equal(await page.locator('#modelStudio').isVisible(),true);await page.click('#playgroundMode');await page.click('#builderMode');assert.equal((await state(page)).n,96);if(process.env.REGRESSION_SCREENSHOT_DIR&&[1440,390].includes(width)){await mkdir(process.env.REGRESSION_SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:`${process.env.REGRESSION_SCREENSHOT_DIR}/regression-${width}.png`,fullPage:true});}assert.deepEqual(page.errors,[]);await page.close();}
 });
+
+test('XLSX worksheet and range flow preserves data on invalid import',async()=>{
+  const page=await open();
+  const bytes=await page.evaluate(()=>{
+    const b=XLSX.utils.book_new();XLSX.utils.book_append_sheet(b,XLSX.utils.aoa_to_sheet([['Notes'],[],['x','y'],[1,3],[2,5],[3,8],[4,9]]),'Observations');
+    return Array.from(new Uint8Array(XLSX.write(b,{bookType:'xlsx',type:'array'})));
+  });
+  await page.locator('#wbImportDetails').evaluate(n=>n.open=true);
+  await page.locator('#wbFile').setInputFiles({name:'synthetic.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(bytes)});
+  await page.locator('#wbWorkbook').waitFor({state:'visible'});
+  await page.fill('#wbRange','A3:B7');await page.click('#wbImportWorkbook');
+  assert.match(await page.locator('#wbImportStatus').textContent(),/Loaded 4 rows and 2 columns/);
+  await page.selectOption('#wbResponse','1');await page.locator('#wbPredictors input').check();await page.click('#wbApplyVariables');await page.click('#wbStartFull');
+  assert.equal((await state(page)).n,4);
+  await page.fill('#wbRange','A1:ZZ999999');await page.click('#wbImportWorkbook');assert.equal((await state(page)).n,4);
+  assert.match(await page.locator('#wbImportStatus').textContent(),/Previous data are unchanged/);assert.deepEqual(page.errors,[]);await page.close();
+});
