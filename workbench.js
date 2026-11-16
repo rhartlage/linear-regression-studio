@@ -305,7 +305,7 @@
     $('anovaTableBody').replaceChildren(...rows.map(cells=>{const tr=el('tr');cells.forEach(c=>tr.append(el('td',c)));return tr;}));
     $('anovaNote').textContent=`Least-squares ANOVA; independent of the comparison line. ${(fit.warnings||[]).join(' ')}`;
   }
-  $('wbLoadExample').addEventListener('click',()=>{fileSequence++;loadData(D.example($('wbExample').value));});
+  $('wbLoadExample').addEventListener('click',()=>{fileSequence++;resetWorkbook();loadData(D.example($('wbExample').value));});
   $('wbResponse').addEventListener('change',()=>{makePredictorOptions();markVariablesPending();});
   $('wbApplyVariables').addEventListener('click',applyVariables);
   $('wbStartEmpty').addEventListener('click',()=>changeModel([],'Started forward selection: intercept only.'));
@@ -324,13 +324,31 @@
     try { const data=D.parse(text); loadData(data,description); $('wbImportStatus').textContent=`Loaded ${data.rows.length} rows and ${data.headers.length} columns. ${data.missing} empty cells; ${data.nonnumeric} non-numeric cells. Select the intended numeric variables and review excluded rows.`; }
     catch(err) { $('wbImportStatus').textContent=`Import not applied: ${err.message} Previous data are unchanged.`; }
   }
-  $('wbImport').addEventListener('click',()=>{fileSequence++;importText($('wbPaste').value,'Pasted dataset. No data were uploaded or saved.');});
-  let fileSequence=0;
+  $('wbImport').addEventListener('click',()=>{fileSequence++;resetWorkbook();importText($('wbPaste').value,'Pasted dataset. No data were uploaded or saved.');});
+  let fileSequence=0,workbook=null,workbookName='';
+  function resetWorkbook(){workbook=null;$('wbWorkbook').hidden=true;}
+  $('wbSheet').addEventListener('change',()=>{$('wbRange').value='';});
+  $('wbImportWorkbook').addEventListener('click',()=>{
+    try{
+      const data=window.RegressionWorkbook.table(workbook,$('wbSheet').value,$('wbRange').value);
+      loadData(data,`Local workbook: ${workbookName}, ${$('wbSheet').value}!${$('wbRange').value}. No data were uploaded or saved.`);
+      $('wbImportStatus').textContent=`Loaded ${data.rows.length} rows and ${data.headers.length} columns. ${data.missing} empty cells; ${data.nonnumeric} non-numeric cells. Select the intended variables and review excluded rows.`;
+    }catch(err){$('wbImportStatus').textContent=`Import not applied: ${err.message} Previous data are unchanged.`;}
+  });
   $('wbFile').addEventListener('change',async event=>{
     const file=event.target.files[0],sequence=++fileSequence;if(!file)return;
-    if(file.size>3_000_000){$('wbImportStatus').textContent='File is too large. Use a CSV smaller than 3 MB.';return;}
-    try { const text=await file.text();if(sequence===fileSequence)importText(text,`Local file: ${file.name}. No data were uploaded or saved.`); }
-    catch(err){$('wbImportStatus').textContent='Could not read that file. Try pasting the table instead.';}
+    resetWorkbook();
+    if(file.size>3_000_000){$('wbImportStatus').textContent='File is too large. Use a file smaller than 3 MB.';return;}
+    try {
+      if(/\.xlsx$/i.test(file.name)){
+        const bytes=await file.arrayBuffer();if(sequence!==fileSequence)return;
+        workbook=window.RegressionWorkbook.read(bytes);workbookName=file.name;
+        $('wbSheet').replaceChildren(...workbook.SheetNames.map(name=>el('option',name,{value:name})));
+        $('wbRange').value='';$('wbWorkbook').hidden=false;
+        $('wbImportStatus').textContent='Choose the worksheet and rectangular data range including headers, then preview. Previous data remain unchanged until import succeeds.';
+      }else {const text=await file.text();if(sequence===fileSequence)importText(text,`Local file: ${file.name}. No data were uploaded or saved.`);}
+    }
+    catch(err){if(sequence===fileSequence)$('wbImportStatus').textContent='Could not read that file. Try saving as CSV or pasting the table instead. Previous data are unchanged.';}
     finally{event.target.value='';}
   });
   $('wbDownload').addEventListener('click',()=>{
